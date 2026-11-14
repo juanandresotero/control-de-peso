@@ -220,7 +220,7 @@ function tarjetaMeta(m, etiqueta, ritmoActual) {
     <div class="fila"><div class="barra crece"><div style="width:${pct}%"></div></div><b>${pct}%</b></div>
     <div class="stats">
       ${stat("Faltan", m.alcanzada ? "0 kg" : `${kg(m.faltan)} kg`)}
-      ${m.alcanzada ? stat("Llegás en", llegada) : statBoton("Llegás en ✎", llegada, llegadaExtra)}
+      ${stat("Llegás en", llegada, llegadaExtra)}
     </div>
     ${objetivo}
   </div>`;

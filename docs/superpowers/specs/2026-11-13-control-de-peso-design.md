@@ -203,7 +203,7 @@ package.json     — solo `"type": "module"` y el script de tests
   primer peso real del período − último peso real, ÷ semanas del período. El período termina hoy (incluye la semana
   en curso). Desde el inicio: peso inicial de la dieta − último peso, ÷ semanas desde que arrancó.
   Se probó y descartó la recta de mínimos cuadrados: daba números que no coinciden con "cuánto bajé".
-- Base elegible en un pop-up del Resumen (tocando "Ritmo" o "Llegás en"): últimos 7 días, últimos 30 días (por
+- Base elegible en un pop-up del Resumen (tocando solo "Ritmo"; los "Llegás en" no se editan): últimos 7 días, últimos 30 días (por
   defecto), desde el inicio, o últimas N semanas (N × 7 días, 1–104). Se guarda en `perfil.baseRitmo` (sincronizado)
   y aplica a todas las metas, al estado "vas bien / atrasado" y al aviso de estancado.
 - Debajo del ritmo se muestran las dos pesadas comparadas (peso y fecha) para verificarlo.
