@@ -8,7 +8,7 @@ function datosEjemplo() {
   d = guardarEtapa(d, { id: "e", nombre: "Dieta 2026", inicio: "2026-11-02", fin: null, pesoInicial: 97,
     metas: [{ id: "m", nombre: "Peso ideal", peso: 75, fecha: "2027-06-30" }] }, 1);
   d = guardarDia(d, "2026-11-08", { peso: 96, comida: "plato", ejercicio: true }, 1);
-  d = guardarDia(d, "2026-11-13", { peso: 95.5, comida: "bien" }, 1);
+  d = guardarDia(d, "2026-11-13", { peso: 95.5, comida: "bien", movimiento: true }, 1);
   d = guardarMedidas(d, "2026-11-10", { cintura: 105, cuello: 41, tobillo: 24 }, 1);
   return guardarPerfil(d, { altura: 167 }, 1);
 }
@@ -18,8 +18,9 @@ test("hojasExcel arma Días, Semanas, Medidas y Etapas y metas", () => {
   assert.deepEqual(hojas.map((h) => h.nombre), ["Días", "Semanas", "Medidas", "Etapas y metas"]);
   const [dias, semanas, medidas, etapas] = hojas;
 
-  assert.deepEqual(dias.filas[0], ["Fecha", "Peso (kg)", "Comida", "Ejercicio", "Relleno", "Dieta", "Semana"]);
-  assert.deepEqual(dias.filas[1], [{ fecha: "2026-11-08" }, 96, "plato malo", "sí", "no", "Dieta 2026", 1]);
+  assert.deepEqual(dias.filas[0], ["Fecha", "Peso (kg)", "Comida", "Ejercicio", "Movimiento", "Relleno", "Dieta", "Semana"]);
+  assert.deepEqual(dias.filas[1], [{ fecha: "2026-11-08" }, 96, "plato malo", "sí", "no", "no", "Dieta 2026", 1]);
+  assert.deepEqual(dias.filas[2].slice(3, 5), ["no", "sí"]);
   assert.equal(dias.filas.length, 3);
 
   assert.deepEqual(semanas.filas[0], ["Dieta", "Semana", "Desde", "Hasta", "Peso último día (kg)", "Promedio (kg)", "Bajó (kg)", "Semana perfecta"]);

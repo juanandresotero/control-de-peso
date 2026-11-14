@@ -8,11 +8,11 @@ const siNo = (v) => (v ? "sí" : "no");
 const fecha = (iso) => (iso ? { fecha: iso } : "");
 
 function hojaDias(datos) {
-  const filas = [["Fecha", "Peso (kg)", "Comida", "Ejercicio", "Relleno", "Dieta", "Semana"]];
+  const filas = [["Fecha", "Peso (kg)", "Comida", "Ejercicio", "Movimiento", "Relleno", "Dieta", "Semana"]];
   for (const f of Object.keys(datos.dias).sort()) {
     const d = datos.dias[f];
     const etapa = etapaDe(f, datos.etapas);
-    filas.push([fecha(f), d.peso ?? "", COMIDAS[d.comida] || "", siNo(d.ejercicio), siNo(d.estimado),
+    filas.push([fecha(f), d.peso ?? "", COMIDAS[d.comida] || "", siNo(d.ejercicio), siNo(d.movimiento), siNo(d.estimado),
       etapa ? etapa.nombre : "", etapa ? numeroSemana(f, etapa) : ""]);
   }
   return { nombre: "Días", filas };

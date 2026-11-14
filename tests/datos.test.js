@@ -42,7 +42,16 @@ test("guardarDia no muta el original y marca mod", () => {
   const original = vacio();
   const d = guardarDia(original, "2026-11-13", { peso: 95.5, comida: "tentacion", ejercicio: true }, AHORA);
   assert.deepEqual(original.dias, {});
-  assert.deepEqual(d.dias["2026-11-13"], { peso: 95.5, comida: "tentacion", ejercicio: true, estimado: false, mod: AHORA });
+  assert.deepEqual(d.dias["2026-11-13"], { peso: 95.5, comida: "tentacion", ejercicio: true, movimiento: false, estimado: false, mod: AHORA });
+});
+
+test("guardarDia: movimiento se guarda, y si hubo ejercicio no cuenta aparte", () => {
+  const mov = guardarDia(vacio(), "2026-11-13", { peso: 95, comida: "bien", movimiento: true }, AHORA);
+  assert.equal(mov.dias["2026-11-13"].movimiento, true);
+  assert.equal(mov.dias["2026-11-13"].ejercicio, false);
+  const ambos = guardarDia(vacio(), "2026-11-13", { peso: 95, comida: "bien", ejercicio: true, movimiento: true }, AHORA);
+  assert.equal(ambos.dias["2026-11-13"].ejercicio, true);
+  assert.equal(ambos.dias["2026-11-13"].movimiento, false);
 });
 
 test("mezclar: gana la edición más reciente de cada día y se unen días distintos", () => {

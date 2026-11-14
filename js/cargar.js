@@ -1,4 +1,4 @@
-// Pantalla Cargar: peso del día + cómo comí + ejercicio. Sirve también para corregir días anteriores.
+// Pantalla Cargar: peso del día + cómo comí + ejercicio o movimiento. Sirve también para corregir días anteriores.
 import { leerPeso, guardarDia, borrarDia } from "./datos.js";
 import { etapaDe, numeroSemana } from "./calculos.js";
 import { sumarDias, formatoLargo } from "./fechas.js";
@@ -12,7 +12,7 @@ const OPCIONES_COMIDA = [
   { valor: "justificado", icono: "🤷", texto: "No fue falta de voluntad" },
 ];
 
-let raiz, fecha = null, comida = "bien", ejercicio = false, confirmandoBorrar = false;
+let raiz, fecha = null, comida = "bien", ejercicio = false, movimiento = false, confirmandoBorrar = false;
 
 export function iniciar(ctx, elemento) {
   raiz = elemento;
@@ -36,7 +36,8 @@ export function iniciar(ctx, elemento) {
       <h2>¿Cómo comiste?</h2>
       <div class="opciones">
         ${OPCIONES_COMIDA.map((o) => `<button class="opcion" data-comida="${o.valor}"><span class="icono">${o.icono}</span>${o.texto}</button>`).join("")}
-        <button class="opcion ejercicio" id="c-ejercicio"><span class="icono">🏃</span>Hice ejercicio</button>
+        <button class="opcion actividad ejercicio" id="c-ejercicio"><span class="icono">🏃</span>Hice ejercicio</button>
+        <button class="opcion actividad movimiento" id="c-movimiento"><span class="icono">🚶</span>Me moví mucho</button>
       </div>
     </div>
     <div class="zona-acciones">
@@ -58,7 +59,9 @@ export function iniciar(ctx, elemento) {
     comida = b.dataset.comida;
     pintarOpciones();
   }));
-  raiz.querySelector("#c-ejercicio").addEventListener("click", () => { ejercicio = !ejercicio; pintarOpciones(); });
+  // Ejercicio y movimiento se excluyen: si hubo ejercicio, el movimiento ya está incluido.
+  raiz.querySelector("#c-ejercicio").addEventListener("click", () => { ejercicio = !ejercicio; if (ejercicio) movimiento = false; pintarOpciones(); });
+  raiz.querySelector("#c-movimiento").addEventListener("click", () => { movimiento = !movimiento; if (movimiento) ejercicio = false; pintarOpciones(); });
   raiz.querySelector("#c-peso").addEventListener("keydown", (e) => { if (e.key === "Enter") guardar(ctx); });
   raiz.querySelector("#c-guardar").addEventListener("click", () => guardar(ctx));
   raiz.querySelector("#c-borrar").addEventListener("click", () => borrar(ctx));
@@ -77,6 +80,7 @@ function prellenar(ctx, conservarMensaje = false) {
   raiz.querySelector("#c-peso").value = dia && dia.peso != null ? kg(dia.peso) : "";
   comida = (dia && dia.comida) || "bien";
   ejercicio = !!(dia && dia.ejercicio);
+  movimiento = !!(dia && dia.movimiento);
   confirmandoBorrar = false;
   const borrarBtn = raiz.querySelector("#c-borrar");
   borrarBtn.hidden = !dia;
@@ -105,6 +109,7 @@ function ultimoPesoAntes(datos, hasta) {
 function pintarOpciones() {
   raiz.querySelectorAll("[data-comida]").forEach((b) => b.classList.toggle("elegida", b.dataset.comida === comida));
   raiz.querySelector("#c-ejercicio").classList.toggle("elegida", ejercicio);
+  raiz.querySelector("#c-movimiento").classList.toggle("elegida", movimiento);
 }
 
 function mensaje(texto, tipo = "") {
@@ -116,7 +121,7 @@ function mensaje(texto, tipo = "") {
 function guardar(ctx) {
   const peso = leerPeso(raiz.querySelector("#c-peso").value);
   if (!peso.ok) return mensaje(peso.error, "error");
-  ctx.cambiar(guardarDia(ctx.datos(), fecha, { peso: peso.valor, comida, ejercicio }));
+  ctx.cambiar(guardarDia(ctx.datos(), fecha, { peso: peso.valor, comida, ejercicio, movimiento }));
   const anterior = ultimoPesoAntes(ctx.datos(), fecha);
   let extra = "";
   if (peso.valor != null && anterior) {

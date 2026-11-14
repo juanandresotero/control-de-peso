@@ -43,6 +43,7 @@ fórmulas rotas: peso actual, kilos perdidos, semanas restantes y promedio).
       peso: 95.5,              // número con 1 decimal, o null si ese día no se pesó
       comida: "bien",          // "bien" | "tentacion" | "plato" | "justificado"
       ejercicio: false,
+      movimiento: false,       // me moví mucho sin hacer ejercicio (agregado 2026-11-14)
       estimado: false,         // true = número de relleno (importado del Excel)
       mod: 1763040000000       // última modificación (ms), para mezclar entre aparatos
     }
@@ -67,7 +68,9 @@ Significado de `comida`:
 - `plato` — un plato completo de mala comida o todo el día (celda roja en el Excel).
 - `justificado` — comí algo que no debía pero no fue por falta de voluntad. **No rompe la semana perfecta.**
 
-`ejercicio` es independiente de `comida` (celeste en el Excel).
+`ejercicio` es independiente de `comida` (celeste en el Excel; en la app ahora es **azul**).
+`movimiento` (agregado 2026-11-14) = no hice ejercicio pero estuve de arriba para abajo, no sentado todo el día.
+Se excluye con `ejercicio` (si hubo ejercicio, el movimiento ya está incluido). Se ve en **celeste**. No cambia la semana ✓/✗.
 
 **Mezcla entre aparatos**: por cada día (clave = fecha) y cada etapa (clave = id) gana el `mod` más
 reciente; `marcasSemana` no se edita desde la app (solo importación). Los borrados usan lápidas.
@@ -100,13 +103,13 @@ reciente; `marcasSemana` no se edita desde la app (solo importación). Los borra
 ## Pantallas
 
 1. **Cargar** (pantalla de inicio): fecha (hoy por defecto, se puede cambiar para editar días previos),
-   peso con teclado numérico y decimal (acepta coma o punto), 4 botones de comida, botón ejercicio,
+   peso con teclado numérico y decimal (acepta coma o punto), 4 botones de comida, botones ejercicio / me moví mucho (uno u otro),
    Guardar. Si el día ya existe, se precarga para editar. Opción "Borrar este día".
 2. **Semanas**: tabla tipo Excel, la más reciente arriba. Por fila: Semana N, fechas, 7 días con colores,
    peso de la semana, diferencia vs la anterior (verde si bajó, rojo si subió), ✓/✗.
    Colores de cada día:
-   - fondo rojo = `plato`; fondo naranja/dorado = `justificado`; fondo celeste = ejercicio (si no hay
-     plato/justificado; si los hay, se ve un ícono 🏃); número rojo = `tentacion`;
+   - fondo rojo = `plato`; fondo naranja/dorado = `justificado`; fondo azul = ejercicio, fondo celeste = movimiento (si no hay
+     plato/justificado; si los hay, se ve un ícono 🏃 o 🚶); número rojo = `tentacion`;
    - borde/fondo amarillo = **día objetivo** de alguna meta;
    - número gris en cursiva = estimado.
    Filtro: etapa actual / otra etapa / todo. Tocar un día abre Cargar en esa fecha.

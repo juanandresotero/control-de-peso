@@ -44,8 +44,9 @@ export function leerPeso(texto) {
   return { ok: true, valor };
 }
 
-export function guardarDia(datos, fecha, { peso = null, comida = "bien", ejercicio = false }, ahora = Date.now()) {
-  const dia = { peso, comida, ejercicio: !!ejercicio, estimado: false, mod: ahora };
+// movimiento = no hice ejercicio pero no estuve sentado todo el día (si hubo ejercicio, ya está incluido).
+export function guardarDia(datos, fecha, { peso = null, comida = "bien", ejercicio = false, movimiento = false }, ahora = Date.now()) {
+  const dia = { peso, comida, ejercicio: !!ejercicio, movimiento: !ejercicio && !!movimiento, estimado: false, mod: ahora };
   return { ...datos, dias: { ...datos.dias, [fecha]: dia } };
 }
 
