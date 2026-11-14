@@ -53,14 +53,14 @@
 
 ### Task 1: Esqueleto del proyecto
 **Files:** `package.json`, `vendor/chart.umd.min.js`, `icon-192.png`, `icon-512.png`, `tools/hacer_iconos.py`
-- [ ] `package.json` con `{"type":"module","scripts":{"test":"node --test tests/"}}`
-- [ ] Bajar Chart.js 4.4.1 de cdnjs a `vendor/`
-- [ ] Generar íconos con PIL (`tools/hacer_iconos.py`)
-- [ ] Commit
+- [x] `package.json` con `{"type":"module","scripts":{"test":"node --test tests/"}}`
+- [x] Bajar Chart.js 4.4.1 de cdnjs a `vendor/`
+- [x] Generar íconos con PIL (`tools/hacer_iconos.py`)
+- [x] Commit
 
 ### Task 2: `js/fechas.js` (TDD)
 **Test:** `tests/fechas.test.js` — casos: `lunesDe("2026-11-13") === "2026-11-09"`, `lunesDe("2026-11-09")` igual, `lunesDe("2026-11-15") === "2026-11-09"`; `sumarDias("2026-02-28", 1) === "2026-03-01"`; `diasEntre("2026-03-02","2026-11-13") === 256`; `formatoCorto("2026-03-02") === "02/03"`; `formatoLargo("2026-11-13") === "vie 13/11/2026"`; `hoyIso(new Date(2026,10,13,23,59)) === "2026-11-13"`.
-- [ ] Test que falla → implementar → pasa → commit
+- [x] Test que falla → implementar → pasa → commit
 
 ### Task 3: `js/calculos.js` (TDD)
 **Test:** `tests/calculos.test.js` con datos de ejemplo:
@@ -70,7 +70,7 @@
 - `listaSemanas`: diferencia contra la anterior (1 decimal), primera contra `pesoBase`, semana vacía no corta la comparación (compara con la última con peso).
 - `resumenEtapa`: kilos, %, promedio (kilos / (días/7)), ritmo4, conteo ✓/✗ solo de semanas cerradas, racha, meta con fecha estimada, meta alcanzada, meta vencida, promedio ≤ 0 → `fechaEstimada:null`.
 - `serieDiaria`: estimados → null.
-- [ ] Test que falla → implementar → pasa → commit
+- [x] Test que falla → implementar → pasa → commit
 
 ### Task 4: `js/datos.js` (TDD)
 **Test:** `tests/datos.test.js`:
@@ -79,58 +79,58 @@
 - `borrarDia` deja lápida; `mezclar` con el otro aparato que todavía lo tiene → borrado; si el otro lo editó DESPUÉS de la lápida → vuelve.
 - `mezclar`: día editado en ambos → gana `mod` mayor; días distintos → unión; etapas por id; `marcasSemana` unión; lápidas de más de 60 días se limpian.
 - `iguales` ignora orden de claves. `validarRespaldo` rechaza `{}` y `null`. `aCsv` tiene encabezado `fecha;peso;comida;ejercicio;estimado` y decimales con coma.
-- [ ] Test que falla → implementar → pasa → commit
+- [x] Test que falla → implementar → pasa → commit
 
 ### Task 5: Worker de sincronización (TDD con D1 falso)
 **Files:** `worker/index.js`, `worker/schema.sql`, `worker/wrangler.toml`, `tests/worker.test.js`
 - Casos: GET id nuevo → `{v:0, blob:null}`; POST base 0 → v 1; POST base 1 → v 2; POST base vieja → 409; id inválido → 400; blob muy grande → 400; OPTIONS → CORS.
-- [ ] Test que falla → implementar → pasa → commit
+- [x] Test que falla → implementar → pasa → commit
 
 ### Task 6: `js/sync.js` (TDD de las partes puras)
 **Test:** `tests/sync.test.js`: `normalizarCodigo` (minúsculas/espacios/O→0/I,L→1; largo incorrecto → null); `codigoNuevo` cumple el formato; `derivar` mismo código → mismo id (32 hex), distinto código → distinto id; `cifrar`/`descifrar` ida y vuelta; descifrar con otra llave falla; `sincronizar` contra un `fetch` falso con el worker real en memoria: aparato A sube, aparato B vincula y recibe los datos, ambos editan días distintos y quedan iguales.
-- [ ] Test que falla → implementar → pasa → commit
+- [x] Test que falla → implementar → pasa → commit
 
 ### Task 7: Importador del Excel
 **Files:** `tools/importar_excel.py`, `tools/test_importar.py`
 - Fila r → lunes = 2025-03-17 + (r−3)·7; columnas J..P; colores según spec; texto con coma → número; estimados en los rangos del spec; Q → `marcasSemana`; etapas e2025/e2026 con metas sin fecha.
 - Test (se saltea si no está el Excel): 2026-03-02 = 108.5 real; 2026-11-13 = 95.5; 2025-10-01 estimado; semanas cerradas Dieta 2026: 19 ✓ / 17 ✗; 2025-08-04..10 tiene `plato`; 2026-04-11 `justificado`.
-- [ ] Test → implementar → pasa → generar `importado/respaldo-inicial.json` e informe → commit (sin datos)
+- [x] Test → implementar → pasa → generar `importado/respaldo-inicial.json` e informe → commit (sin datos)
 
 ### Task 8: Interfaz — esqueleto, navegación y Cargar
 **Files:** `index.html`, `styles.css`, `js/app.js`, `js/cargar.js`
 - 5 pestañas abajo (Cargar, Semanas, Resumen, Gráficas, Ajustes), indicador de sync arriba.
 - Cargar: fecha (hoy, ← →), peso (`inputmode="decimal"`), 4 botones de comida, ejercicio, Guardar, Borrar día; precarga si existe; muestra "Semana N · Dieta X".
-- [ ] Implementar → probar en navegador → commit
+- [x] Implementar → probar en navegador → commit
 
 ### Task 9: Semanas
 **Files:** `js/semanas.js`, estilos
 - Selector de etapa + "Todo"; tarjeta por semana (más reciente arriba): Sem N, fechas, peso, diferencia ▼ verde / ▲ roja, ✓/✗ (en curso "…"), 7 celdas con colores del spec; tocar celda → Cargar esa fecha.
-- [ ] Implementar → probar → commit
+- [x] Implementar → probar → commit
 
 ### Task 10: Resumen
 **Files:** `js/resumen.js`
 - Tarjetas: peso inicial/actual/mejor, kilos y %, semana N, promedio y ritmo 4 sem (con aviso "estancado" si ritmo4 ≤ 0.1), ✓/✗ y racha, por meta barra + faltan + fecha estimada + día objetivo y kg/semana necesarios o "vencida".
-- [ ] Implementar → probar → commit
+- [x] Implementar → probar → commit
 
 ### Task 11: Gráficas
 **Files:** `js/graficas.js`
 - Selector etapa/todo; "Semana a semana" y "Día a día" con Chart.js, `spanGaps:true` + `segment.borderDash` en tramos sin datos; líneas de metas; punto amarillo en el día objetivo.
-- [ ] Implementar → probar → commit
+- [x] Implementar → probar → commit
 
 ### Task 12: Ajustes, respaldo y sync en la interfaz
 **Files:** `js/ajustes.js`, `js/respaldo.js`
 - Etapas y metas (crear/editar/borrar con doble toque), vinculación (crear, vincular, ver código, copiar link, sincronizar ahora, desvincular, estado), respaldo (descargar JSON/CSV, cargar JSON con `mezclar`).
-- [ ] Implementar → probar → commit
+- [x] Implementar → probar → commit
 
 ### Task 13: PWA
 **Files:** `manifest.webmanifest`, `sw.js`, registro en `js/app.js`
 - Cache del shell con nombre versionado; red primero para los archivos de la app, cache si no hay red.
-- [ ] Implementar → probar offline → commit
+- [x] Implementar → probar offline → commit
 
 ### Task 14: Publicación
-- [ ] `wrangler d1 create control-peso-sync` → id en `wrangler.toml` → `wrangler d1 execute --remote --file schema.sql` → `wrangler deploy` → URL en `js/sync.js`
-- [ ] `gh repo create juanandresotero/control-de-peso --public` (verificar antes que no hay datos personales en git) → push → activar Pages
-- [ ] Prueba final con Playwright en la URL publicada (escritorio y celu) → commit
+- [x] `wrangler d1 create control-peso-sync` → id en `wrangler.toml` → `wrangler d1 execute --remote --file schema.sql` → `wrangler deploy` → URL en `js/sync.js`
+- [x] `gh repo create juanandresotero/control-de-peso --public` (verificar antes que no hay datos personales en git) → push → activar Pages
+- [x] Prueba final con Playwright en la URL publicada (escritorio y celu) → commit
 
 ### Task 15: Carga del historial y entrega
 - [ ] Guiar al usuario: abrir la app → Ajustes → Cargar respaldo (`importado/respaldo-inicial.json`) → crear código → vincular el celu.
