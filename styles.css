@@ -257,6 +257,9 @@ details.tarjeta > summary { cursor: pointer; list-style-position: inside; paddin
     grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
   }
   .ancho-completo { grid-column: 1 / -1; }
+  /* Semanas: cada fila se llena de derecha a izquierda (la más nueva a la derecha), así se lee 35 · 36 · 37. */
+  #pantalla-semanas { direction: rtl; }
+  #pantalla-semanas > * { direction: ltr; }
   #pantalla-semanas > .ancho-completo select, #pantalla-resumen > .ancho-completo select { max-width: 420px; }
 
   /* Gráficas: a todo el ancho y más altas. */
