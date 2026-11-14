@@ -23,15 +23,15 @@ export function pintar(ctx, opciones = {}) {
   const datos = ctx.datos();
   const etapas = [...(etapaNueva ? [etapaNueva] : []), ...[...datos.etapas].reverse()];
   raiz.innerHTML = `
-    <div class="tarjeta" id="a-sync"></div>
-    <div class="tarjeta">
+    <div class="tarjeta zona-sync" id="a-sync"></div>
+    <div class="tarjeta zona-etapas">
       <h2>Etapas y metas</h2>
       <p class="sutil" style="margin-top:0">Cada dieta es una etapa: el contador de semanas arranca en 1 en cada una.
         El <b>día objetivo</b> de una meta se ve en amarillo en Semanas.</p>
       ${etapas.map(formEtapa).join("")}
       <button class="boton" data-accion="nueva-etapa">+ Nueva etapa</button>
     </div>
-    <div class="tarjeta">
+    <div class="tarjeta zona-respaldo">
       <h2>Respaldo</h2>
       <p class="sutil" style="margin-top:0">Bajá una copia de todo cada tanto. "Cargar respaldo" junta el archivo con lo que ya tenés (no borra nada).</p>
       <div class="botones">

@@ -8,7 +8,6 @@ import { esc, kg, etapaPorDefecto, sinEtapas } from "./ui.js";
 
 const COLOR_LINEA = "#2e7d32";
 const COLORES_META = ["#f57c00", "#6a1b9a", "#0277bd", "#c62828"];
-const COLOR_DIA = { plato: "#e53935", tentacion: "#ff8a80", justificado: "#ffb74d" };
 
 let raiz;
 let graficasDieta = [], graficaRango = null;
@@ -29,6 +28,8 @@ export function iniciar(ctx, elemento) {
   });
 }
 
+// Solo la línea: el punto aparece recién al pasar el mouse o el dedo (para ver el valor).
+const sinPuntos = { pointRadius: 0, pointHoverRadius: 5, pointHitRadius: 8 };
 const punteadoEnHuecos = { borderDash: (c) => (c.p0.skip || c.p1.skip ? [6, 6] : undefined) };
 
 function opcionesBase() {
@@ -75,7 +76,7 @@ function graficaSemanal(canvas, datos, etapa, desde, hasta, hoy) {
       datasets: [
         {
           label: "Peso de la semana", data: semanas.map((s) => (s.estimada ? null : s.peso)),
-          borderColor: COLOR_LINEA, backgroundColor: COLOR_LINEA, pointRadius: 3, tension: 0.2, segment: punteadoEnHuecos,
+          borderColor: COLOR_LINEA, backgroundColor: COLOR_LINEA, borderWidth: 2.5, ...sinPuntos, tension: 0.2, segment: punteadoEnHuecos,
         },
         ...capasDeMetas(etapa.metas || [], semanas.length, indiceSemana),
       ],
@@ -87,15 +88,14 @@ function graficaSemanal(canvas, datos, etapa, desde, hasta, hoy) {
 function graficaDiaria(canvas, datos, desde, hasta, metas) {
   const serie = serieDiaria(datos, desde, hasta);
   const conAnio = diasEntre(desde, hasta) > 300;
-  const colorPunto = serie.fechas.map((f) => COLOR_DIA[datos.dias[f]?.comida] || COLOR_LINEA);
   return new window.Chart(canvas, {
     type: "line",
     data: {
       labels: serie.fechas.map((f) => (conAnio ? `${formatoCorto(f)}/${f.slice(2, 4)}` : formatoCorto(f))),
       datasets: [
         {
-          label: "Peso del día", data: serie.valores, borderColor: COLOR_LINEA, borderWidth: 1.5,
-          pointRadius: serie.fechas.length > 200 ? 1.5 : 2.5, pointBackgroundColor: colorPunto, pointBorderColor: colorPunto,
+          label: "Peso del día", data: serie.valores, borderColor: COLOR_LINEA, backgroundColor: COLOR_LINEA, borderWidth: 2,
+          ...sinPuntos, tension: 0.15,
           segment: punteadoEnHuecos,
         },
         ...capasDeMetas(metas, serie.fechas.length, (fecha) => serie.fechas.indexOf(fecha)),
@@ -105,8 +105,7 @@ function graficaDiaria(canvas, datos, desde, hasta, metas) {
   });
 }
 
-const ayudaColores = `<p class="sutil" style="margin:8px 0 0">Puntos rojos: plato malo · rosados: tentación · naranjas: no fue falta de voluntad.
-  La línea punteada une días sin pesarte.</p>`;
+const ayudaColores = `<p class="sutil" style="margin:8px 0 0">La línea punteada une días sin pesarte.</p>`;
 
 export function pintar(ctx) {
   const datos = ctx.datos();

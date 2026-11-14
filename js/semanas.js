@@ -39,7 +39,7 @@ export function pintar(ctx) {
   const objetivos = diasObjetivo(datos.etapas);
 
   raiz.innerHTML = `
-    <div class="tarjeta">
+    <div class="tarjeta ancho-completo">
       <select id="s-etapa">${opcionesEtapa(datos, elegida, true)}</select>
       <div class="leyenda" style="margin-top:10px">
         <span>Bien</span>

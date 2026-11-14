@@ -16,7 +16,7 @@ let raiz, fecha = null, comida = "bien", ejercicio = false, confirmandoBorrar = 
 export function iniciar(ctx, elemento) {
   raiz = elemento;
   raiz.innerHTML = `
-    <div class="tarjeta">
+    <div class="tarjeta zona-fecha">
       <div class="fecha-nav">
         <button class="boton" data-mover="-1" aria-label="Día anterior">◀</button>
         <input type="date" id="c-fecha">
@@ -24,23 +24,25 @@ export function iniciar(ctx, elemento) {
       </div>
       <div class="contexto sutil" id="c-contexto"></div>
     </div>
-    <div class="tarjeta">
+    <div class="tarjeta zona-peso">
       <div class="peso-entrada">
         <input id="c-peso" type="text" inputmode="decimal" autocomplete="off" placeholder="00,0" aria-label="Peso">
         <span>kg</span>
       </div>
       <p class="sutil" style="text-align:center;margin:6px 0 0" id="c-anterior"></p>
     </div>
-    <div class="tarjeta">
+    <div class="tarjeta zona-comida">
       <h2>¿Cómo comiste?</h2>
       <div class="opciones">
         ${OPCIONES_COMIDA.map((o) => `<button class="opcion" data-comida="${o.valor}"><span class="icono">${o.icono}</span>${o.texto}</button>`).join("")}
         <button class="opcion ejercicio" id="c-ejercicio"><span class="icono">🏃</span>Hice ejercicio</button>
       </div>
     </div>
-    <button class="boton principal ancho" id="c-guardar">Guardar</button>
-    <div class="mensaje" id="c-mensaje"></div>
-    <button class="boton peligro" id="c-borrar" hidden>Borrar este día</button>`;
+    <div class="zona-acciones">
+      <button class="boton principal ancho" id="c-guardar">Guardar</button>
+      <div class="mensaje" id="c-mensaje"></div>
+      <button class="boton peligro" id="c-borrar" hidden>Borrar este día</button>
+    </div>`;
 
   raiz.querySelector("#c-fecha").addEventListener("change", (e) => {
     if (e.target.value) { fecha = e.target.value; prellenar(ctx); }

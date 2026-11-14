@@ -21,7 +21,9 @@ export function pintar(ctx) {
   const r = resumenEtapa(datos, etapa, hoy);
 
   raiz.innerHTML = `
-    <div class="tarjeta"><select id="r-etapa">${opcionesEtapa(datos, elegida, false)}</select></div>
+    <div class="tarjeta ancho-completo"><select id="r-etapa">${opcionesEtapa(datos, elegida, false)}</select></div>
+
+    ${alertaRitmo(r)}
 
     <div class="tarjeta">
       <div class="sutil">Peso actual · ${formatoLargo(r.fechaActual)}</div>
@@ -30,8 +32,6 @@ export function pintar(ctx) {
         (${kg(Math.abs(r.porcentaje) * 100)}%) desde ${kg(r.pesoInicial)} kg</div>
       <div class="sutil" style="margin-top:4px">Semana ${r.semanaNumero} de ${esc(etapa.nombre)} · empezó el ${formatoLargo(etapa.inicio)}</div>
     </div>
-
-    ${alertaRitmo(r)}
 
     <div class="tarjeta">
       <div class="datos-grid">
@@ -59,8 +59,8 @@ const kgSemana = (n) => (n == null ? "—" : `${n > 0 ? "−" : n < 0 ? "+" : ""
 
 function alertaRitmo(r) {
   if (r.ritmo4 == null) return "";
-  if (r.ritmo4 < 0) return `<div class="alerta">⚠️ En las últimas 4 semanas <b>subiste</b> ${kg(-r.ritmo4, 2)} kg por semana.</div>`;
-  if (r.ritmo4 <= 0.1) return `<div class="alerta">⚠️ Estás <b>estancado</b>: en las últimas 4 semanas bajaste ${kg(r.ritmo4, 2)} kg por semana.</div>`;
+  if (r.ritmo4 < 0) return `<div class="alerta ancho-completo">⚠️ En las últimas 4 semanas <b>subiste</b> ${kg(-r.ritmo4, 2)} kg por semana.</div>`;
+  if (r.ritmo4 <= 0.1) return `<div class="alerta ancho-completo">⚠️ Estás <b>estancado</b>: en las últimas 4 semanas bajaste ${kg(r.ritmo4, 2)} kg por semana.</div>`;
   return "";
 }
 

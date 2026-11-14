@@ -172,6 +172,66 @@ select { width: 100%; }
   background: #323232; color: #fff; padding: 10px 16px; border-radius: 10px; z-index: 10; max-width: 90vw;
 }
 
+/* ===== PC / pantallas anchas: usar todo el ancho ===== */
+@media (min-width: 1000px) {
+  body { padding-bottom: 24px; }
+  main { max-width: 1680px; padding: 24px 32px; }
+
+  /* El menú pasa arriba, dentro de la barra verde. */
+  .cabecera { padding: 0 24px; height: 60px; }
+  .cabecera h1 { font-size: 1.3rem; }
+  .estado-sync { margin-left: auto; order: 2; }
+  .pestanas {
+    position: fixed; top: 0; bottom: auto; left: auto; right: 72px; z-index: 6;
+    display: flex; gap: 4px; background: none; border: 0; padding: 0; height: 60px; align-items: center;
+  }
+  .pestanas button {
+    flex-direction: row; gap: 6px; font-size: .95rem; color: rgba(255, 255, 255, .85);
+    padding: 8px 14px; border-radius: 10px;
+  }
+  .pestanas button span { font-size: 1.05rem; }
+  .pestanas button:hover { background: rgba(255, 255, 255, .12); }
+  .pestanas button.activa { color: #fff; background: rgba(255, 255, 255, .2); }
+  .aviso { bottom: 24px; }
+
+  /* Cargar: fecha y peso a la izquierda, comida a la derecha. */
+  #pantalla-cargar {
+    display: grid; max-width: 1100px; width: 100%; margin: 0 auto; gap: 16px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    grid-template-areas: "fecha comida" "peso comida" "acciones acciones";
+  }
+  #pantalla-cargar .zona-fecha { grid-area: fecha; }
+  #pantalla-cargar .zona-peso { grid-area: peso; }
+  #pantalla-cargar .zona-comida { grid-area: comida; }
+  #pantalla-cargar .zona-acciones { grid-area: acciones; display: flex; flex-direction: column; gap: 10px; }
+  #pantalla-cargar .zona-acciones .boton.ancho { max-width: 420px; margin: 0 auto; }
+  #pantalla-cargar .zona-acciones .boton.peligro { align-self: center; }
+  #pantalla-cargar .opciones { grid-template-columns: 1fr 1fr; }
+
+  /* Semanas, Resumen: tarjetas en columnas. */
+  #pantalla-semanas, #pantalla-resumen {
+    display: grid; gap: 16px; align-items: start;
+    grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+  }
+  .ancho-completo { grid-column: 1 / -1; }
+  #pantalla-resumen .datos-grid { grid-template-columns: 1fr 1fr; }
+  #pantalla-semanas > .ancho-completo select, #pantalla-resumen > .ancho-completo select { max-width: 420px; }
+
+  /* Gráficas: a todo el ancho y más altas. */
+  #pantalla-graficas .grafica { height: 460px; }
+  .rango { max-width: 720px; }
+
+  /* Ajustes: vincular y respaldo a la izquierda, etapas a la derecha. */
+  #pantalla-ajustes {
+    display: grid; gap: 16px; align-items: start;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+    grid-template-areas: "sync etapas" "respaldo etapas" ". etapas";
+  }
+  #pantalla-ajustes .zona-sync { grid-area: sync; }
+  #pantalla-ajustes .zona-etapas { grid-area: etapas; }
+  #pantalla-ajustes .zona-respaldo { grid-area: respaldo; }
+}
+
 @media (min-width: 700px) {
   .meta-fila { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.4fr) auto; border-top: 0; padding-top: 0; }
   .meta-fila [data-m="nombre"] { grid-column: auto; }
