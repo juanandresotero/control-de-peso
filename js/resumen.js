@@ -1,5 +1,6 @@
 // Pantalla Resumen: los números que importan de la dieta actual, con poco texto.
-import { resumenEtapa } from "./calculos.js";
+import { resumenEtapa, rangoEtapa } from "./calculos.js";
+import { balanceComidas } from "./habitos.js";
 import { formatoCorto } from "./fechas.js";
 import { esc, kg, etapaPorDefecto, sinEtapas } from "./ui.js";
 import { imc, claseImc, claseGrasa, diagnostico, ultimaGrasa, resumenMedidas } from "./cuerpo.js";
@@ -43,8 +44,29 @@ export function pintar(ctx) {
         ${stat("Racha", `${r.racha} ${r.racha === 1 ? "semana" : "semanas"}`, estaSemana(r))}
       </div>
     </div>
+    ${tarjetaComidas(datos, etapa, hoy)}
     ${tarjetaCuerpo(datos, r.pesoActual)}
     ${tarjetaMedidas(datos)}`;
+}
+
+// Días que comiste bien y mal en esta dieta (tentación = medio día malo) y tu día más difícil.
+function tarjetaComidas(datos, etapa, hoy) {
+  const { desde, hasta } = rangoEtapa(etapa, datos.etapas, hoy);
+  const b = balanceComidas(datos, desde, hasta < hoy ? hasta : hoy);
+  if (!b.total) return "";
+  const pct = (n) => `${Math.round((n / b.total) * 100)}%`;
+  const dias = (n) => `${kg(n, Number.isInteger(n) ? 0 : 1)}`;
+  const peor = b.peorDia
+    ? stat("Día más difícil", b.peorDia.nombre[0].toUpperCase() + b.peorDia.nombre.slice(1),
+      `${Math.round((b.peorDia.mal / b.peorDia.total) * 100)}% de esos días con desliz`)
+    : stat("Día más difícil", "—", "sin deslices");
+  return `<div class="tarjeta">
+    <div class="stats">
+      ${stat("Días que comiste bien", `<span style="color:var(--verde)">${dias(b.bien)}</span>`, pct(b.bien))}
+      ${stat("Días que comiste mal", `<span style="color:var(--rojo)">${dias(b.mal)}</span>`, `${pct(b.mal)} · tentación = ½ día`)}
+      ${peor}
+    </div>
+  </div>`;
 }
 
 // --- Debajo de lo principal: cuerpo y medidas ---

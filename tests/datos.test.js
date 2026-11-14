@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   vacio, cargar, guardarTodo, leerPeso, guardarDia, borrarDia, guardarEtapa, borrarEtapa, mezclar, iguales,
-  validarRespaldo, aCsv,
+  validarRespaldo,
 } from "../js/datos.js";
 
 const DIA_MS = 86400000;
@@ -93,14 +93,6 @@ test("validarRespaldo", () => {
   assert.equal(validarRespaldo(vacio()), true);
 });
 
-test("aCsv para abrir en Excel", () => {
-  let d = guardarDia(vacio(), "2026-11-13", { peso: 95.5, comida: "plato", ejercicio: true }, AHORA);
-  d = guardarDia(d, "2026-11-12", { peso: null, comida: "justificado", ejercicio: false }, AHORA);
-  const lineas = aCsv(d).trim().split("\r\n");
-  assert.equal(lineas[0], "fecha;peso;comida;ejercicio;estimado");
-  assert.equal(lineas[1], "2026-11-12;;no fue falta de voluntad;no;no");
-  assert.equal(lineas[2], "2026-11-13;95,5;plato malo;sí;no");
-});
 
 test("medidas: guardar, borrar y mezclar entre aparatos", async () => {
   const { guardarMedidas, borrarMedidas, guardarPerfil } = await import("../js/datos.js");

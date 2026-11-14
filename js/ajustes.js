@@ -2,7 +2,8 @@
 import { guardarEtapa, borrarEtapa, nuevoId, leerPeso, mezclar, guardarPerfil } from "./datos.js";
 import { leerCm } from "./cuerpo.js";
 import { esc, kg } from "./ui.js";
-import { descargarJson, descargarCsv, leerRespaldo } from "./respaldo.js";
+import { descargarJson, descargarExcel, leerRespaldo } from "./respaldo.js";
+import { formatoLargo, diasEntre } from "./fechas.js";
 
 let raiz, mostrarCodigo = false, confirmandoDesvincular = false, codigoPrecargado = "", etapaNueva = null;
 const confirmandoBorrar = new Set();
@@ -35,10 +36,13 @@ export function pintar(ctx, opciones = {}) {
     ${formPerfil(datos.perfil)}
     <div class="tarjeta zona-respaldo">
       <h2>Respaldo</h2>
-      <p class="sutil" style="margin-top:0">Bajá una copia de todo cada tanto. "Cargar respaldo" junta el archivo con lo que ya tenés (no borra nada).</p>
+      <p style="margin-top:0">Último Excel: <b>${ultimoExcel(datos.perfil?.ultimoExcel, ctx.hoy())}</b></p>
       <div class="botones">
-        <button class="boton" data-accion="bajar-json">⬇️ Descargar respaldo</button>
-        <button class="boton" data-accion="bajar-csv">⬇️ Descargar para Excel</button>
+        <button class="boton principal" data-accion="bajar-excel">⬇️ Descargar Excel con todos los datos</button>
+      </div>
+      <p class="sutil">Para la app (sirve para volver a cargar todo si algún día hace falta):</p>
+      <div class="botones">
+        <button class="boton" data-accion="bajar-json">⬇️ Descargar respaldo de la app</button>
         <label class="boton" style="text-align:center">⬆️ Cargar respaldo<input type="file" id="a-archivo" accept=".json,application/json" hidden></label>
       </div>
     </div>`;
@@ -76,6 +80,12 @@ export function pintarSync(ctx) {
       <button class="boton peligro" data-accion="desvincular">${confirmandoDesvincular ? "¿Seguro? Tocá otra vez para desvincular" : "Desvincular este aparato"}</button>
     </div>
     <div class="mensaje" id="a-msg"></div>`;
+}
+
+function ultimoExcel(fecha, hoy) {
+  if (!fecha) return "todavía ninguno";
+  const dias = diasEntre(fecha, hoy);
+  return `${formatoLargo(fecha)} (${dias === 0 ? "hoy" : dias === 1 ? "ayer" : `hace ${dias} días`})`;
 }
 
 function hace(ms) {
@@ -204,8 +214,10 @@ async function alTocar(ctx, e) {
     ctx.avisar("Etapa borrada (los días cargados siguen estando)");
   } else if (accion === "bajar-json") {
     descargarJson(ctx.datos(), ctx.hoy());
-  } else if (accion === "bajar-csv") {
-    descargarCsv(ctx.datos(), ctx.hoy());
+  } else if (accion === "bajar-excel") {
+    descargarExcel(ctx.datos(), ctx.hoy());
+    ctx.cambiar(guardarPerfil(ctx.datos(), { ultimoExcel: ctx.hoy() }));
+    ctx.avisar("✓ Excel descargado");
   } else if (accion === "guardar-perfil") {
     const r = leerFormPerfil();
     const caja = raiz.querySelector("#p-msg");

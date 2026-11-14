@@ -1,5 +1,7 @@
-// Respaldo: bajar todo a un archivo (JSON para volver a cargar, CSV para abrir en Excel) y cargar un respaldo.
-import { aCsv, validarRespaldo } from "./datos.js";
+// Respaldo: bajar todo a un archivo (JSON para volver a cargar, Excel para guardar en un pendrive) y cargar un respaldo.
+import { validarRespaldo } from "./datos.js";
+import { crearXlsx } from "./excel.js";
+import { hojasExcel } from "./hojas-excel.js";
 
 function descargar(nombre, contenido, tipo) {
   const url = URL.createObjectURL(new Blob([contenido], { type: tipo }));
@@ -14,9 +16,9 @@ export function descargarJson(datos, hoy) {
   descargar(`control-peso-respaldo-${hoy}.json`, JSON.stringify(datos), "application/json");
 }
 
-export function descargarCsv(datos, hoy) {
-  // El "﻿" al principio hace que Excel reconozca los acentos.
-  descargar(`control-peso-${hoy}.csv`, "﻿" + aCsv(datos), "text/csv;charset=utf-8");
+export function descargarExcel(datos, hoy) {
+  descargar(`control-peso-${hoy}.xlsx`, crearXlsx(hojasExcel(datos, hoy)),
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 }
 
 // Devuelve los datos del archivo, o lanza un Error con un mensaje para el usuario.

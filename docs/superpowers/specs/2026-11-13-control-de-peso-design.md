@@ -186,6 +186,15 @@ package.json     — solo `"type": "module"` y el script de tests
 - Botón "Guía" junto a las medidas: abre `img/guia-medidas.jpg` (letras A–L en cada zona).
 - Resumen: al final, tarjetas Cuerpo y Medidas (primera, última y cambio por zona). Comida por día: descartado por el usuario.
 
+## Hábitos y respaldo en Excel (agregado el 2026-11-14)
+
+- Resumen: días que comí bien vs mal en la dieta actual (plato = 1 día malo, tentación = ½, "no fue falta de
+  voluntad" = bien) y el día de la semana más difícil (mayor proporción de deslices; se recalcula solo).
+- Ajustes → Respaldo: "Descargar Excel con todos los datos" (.xlsx real armado sin librerías: hojas Días, Semanas,
+  Medidas, Etapas y metas) y la fecha del último Excel descargado (`perfil.ultimoExcel`, sincronizada).
+  Reemplaza al CSV. El respaldo JSON de la app sigue para restaurar.
+- Descartado por el usuario: aviso de días sin pesarse y recordatorio de respaldo.
+
 ## Fuera de alcance (YAGNI)
 
 Notas por día, fotos, recordatorios/notificaciones, varios usuarios, registro de comidas.

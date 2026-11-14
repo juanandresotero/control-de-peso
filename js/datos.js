@@ -145,12 +145,3 @@ export function iguales(a, b) {
   return estable(a) === estable(b);
 }
 
-export function aCsv(datos) {
-  const filas = ["fecha;peso;comida;ejercicio;estimado"];
-  for (const fecha of Object.keys(datos.dias).sort()) {
-    const d = datos.dias[fecha];
-    const peso = d.peso == null ? "" : String(d.peso).replace(".", ",");
-    filas.push([fecha, peso, COMIDAS[d.comida] || "", d.ejercicio ? "sí" : "no", d.estimado ? "sí" : "no"].join(";"));
-  }
-  return filas.join("\r\n") + "\r\n";
-}

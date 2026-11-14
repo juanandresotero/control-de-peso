@@ -15,6 +15,7 @@ En el celu: abrir el link → menú del navegador → "Agregar a pantalla de ini
 ## Cómo se guardan los datos
 - En el aparato, y se sincronizan con un código de 20 letras (sin cuentas ni contraseñas, no vence).
 - Viajan **cifrados**: el servidor (`worker/`, Cloudflare) guarda texto ilegible.
+- Ajustes → Respaldo → **Descargar Excel**: todos los datos en un .xlsx (para guardar en un pendrive).
 - **El código es la única llave**: anotalo en un lugar seguro y bajá un respaldo cada tanto (Ajustes → Respaldo).
 - Este repositorio **no** contiene datos personales.
 
