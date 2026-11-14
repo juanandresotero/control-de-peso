@@ -1,0 +1,8 @@
+{
+  "name": "control-de-peso",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/"
+  }
+}

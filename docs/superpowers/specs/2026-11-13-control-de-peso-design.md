@@ -136,7 +136,7 @@ y un informe en pantalla. Luego se carga en la app con "Cargar respaldo".
 - Etapas: "Dieta 2025" (inicio 2025-03-22, peso inicial 104.8) y "Dieta 2026"
   (inicio 2026-03-02, peso inicial 108.5) con metas "Salir de obesidad" 83.6 y "Peso ideal" 75,
   **sin fecha** (las del Excel ya vencieron; el usuario pone las nuevas).
-- Chequeos del informe: 2026-03-02 = 108.5, 2026-11-13 = 95.5, Dieta 2026 con 20 ✓ y 17 ✗ (incluye la semana en curso).
+- Chequeos del informe: 2026-03-02 = 108.5, 2026-11-13 = 95.5, Dieta 2026 con 19 ✓ y 17 ✗ en semanas cerradas (la semana en curso va aparte).
 
 ## Estructura de archivos
 
