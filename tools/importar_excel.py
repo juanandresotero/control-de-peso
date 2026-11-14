@@ -30,7 +30,6 @@ ESTIMADOS = [(date(2025, 9, 8), date(2025, 11, 16)), (date(2025, 12, 15), date(2
 
 # Datos del cuerpo que el usuario tenía en otra planilla (captura del 2026-11-13).
 ALTURA_CM = 167
-NUTRICION = {"kcalPorKg": 35, "protPorKg": 2, "grasaPorKg": 0.9, "fibraPorKg": 0.5}
 MEDIDAS = {
     "2026-03-02": {"cintura": 124, "cuello": 41},
     "2026-04-27": {"hombros": 51, "pecho": 117, "bicepRelajado": 37, "bicepContraido": 43.5, "antebrazo": 39,
@@ -140,7 +139,7 @@ def importar(ruta_excel, hoy=None, ahora_ms=None):
     ]
     medidas = {fecha: {**valores, "mod": ahora_ms} for fecha, valores in MEDIDAS.items()}
     medidas["2026-05-14"] = {"grasa": grasa_corregida(43.3), "mod": ahora_ms}
-    perfil = {"altura": ALTURA_CM, "nutricion": NUTRICION, "mod": ahora_ms}
+    perfil = {"altura": ALTURA_CM, "mod": ahora_ms}
     datos = {"version": 1, "dias": dias, "etapas": etapas, "marcasSemana": marcas,
              "medidas": medidas, "perfil": perfil, "tombs": {}}
     return datos, informe

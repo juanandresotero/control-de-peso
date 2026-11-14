@@ -148,9 +148,15 @@ details.tarjeta > summary { cursor: pointer; list-style-position: inside; paddin
 .medidas-grid label, .campos-perfil label { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .medidas-grid label span, .campos-perfil label span { font-size: .85rem; color: var(--gris); }
 .medidas-grid input, .campos-perfil input { width: 100%; min-width: 0; }
+.medidas-cab { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; }
+.medidas-cab p { margin: 8px 0; }
+.medidas-cab .boton { flex-shrink: 0; margin-top: 4px; }
+.dialogo-guia { border: 0; border-radius: var(--radio); padding: 12px; width: min(94vw, 760px); max-height: 94vh; }
+.dialogo-guia::backdrop { background: rgba(0, 0, 0, .6); }
+.dialogo-guia img { display: block; width: 100%; height: auto; margin-top: 8px; border-radius: 8px; }
+.dialogo-guia .boton { display: block; margin-left: auto; }
 .grasa-vivo { min-height: 1.2em; margin: 6px 0 10px; }
 .diagnostico { margin: 12px 0 0; font-weight: 600; }
-.stats.chicas b { font-size: 1.25rem; }
 .campos-perfil { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; margin-bottom: 8px; }
 .tabla-medidas { width: 100%; border-collapse: collapse; font-size: .95rem; }
 .tabla-medidas th { text-align: left; color: var(--gris); font-weight: 600; font-size: .8rem; padding: 6px 4px; border-bottom: 1px solid var(--borde); }

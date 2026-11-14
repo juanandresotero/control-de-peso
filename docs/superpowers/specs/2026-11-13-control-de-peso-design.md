@@ -176,15 +176,15 @@ package.json     — solo `"type": "module"` y el script de tests
 
 ## Cuerpo y comida (agregado el 2026-11-13, pedido por el usuario)
 
-- `datos.perfil = { altura (cm), nutricion: { kcalPorKg, protPorKg, grasaPorKg, fibraPorKg }, mod }` — se edita en Ajustes.
+- `datos.perfil = { altura (cm), mod }` — se edita en Ajustes.
 - `datos.medidas = { "YYYY-MM-DD": { cuello, hombros, pecho, bicepRelajado, bicepContraido, antebrazo, muneca, abdomen,
-  cintura, cadera, muslo, rodilla, gemelos, grasa?, mod } }` — se carga en Cargar (debajo de Guardar). `grasa` solo
+  cintura, cadera, muslo, rodilla, gemelos, tobillo, grasa?, mod } }` — se carga en Cargar (debajo de Guardar). `grasa` solo
   para historial sin medidas. Se mezcla por fecha como los días (lápidas `medida:`).
 - % de grasa: fórmula de la Marina de EE.UU. para hombres **en cm** (el Excel usaba la de pulgadas con cm y daba ~6 puntos de más).
 - IMC con clasificación OMS; % de grasa con rangos ACE para hombres; diagnóstico combinado: el grado lo da el IMC,
   el % de grasa dice si el exceso es grasa o músculo.
-- Comida por día = factores × peso actual; carbohidratos = calorías sobrantes / 4.
-- Resumen: al final, tarjetas Cuerpo, Comida por día y Medidas (primera, última y cambio por zona).
+- Botón "Guía" junto a las medidas: abre `img/guia-medidas.jpg` (letras A–L en cada zona).
+- Resumen: al final, tarjetas Cuerpo y Medidas (primera, última y cambio por zona). Comida por día: descartado por el usuario.
 
 ## Fuera de alcance (YAGNI)
 

@@ -88,13 +88,7 @@ test("leerCm", () => {
 test("ZONAS incluye cuello y cintura (los que usa el % de grasa)", () => {
   const claves = ZONAS.map(([clave]) => clave);
   assert.ok(claves.includes("cuello") && claves.includes("cintura"));
-  assert.equal(claves.length, 13);
+  assert.equal(claves.length, 14);
+  assert.equal(ZONAS.find(([c]) => c === "tobillo")[2], "L");
 });
 
-test("metasNutricion: tus fórmulas del Excel (por kilo de peso)", async () => {
-  const { metasNutricion, NUTRICION_INICIAL } = await import("../js/cuerpo.js");
-  assert.deepEqual(metasNutricion(95.5, NUTRICION_INICIAL), { kcal: 3343, proteinas: 191, grasas: 86, fibra: 48, carbohidratos: 451 });
-  assert.equal(metasNutricion(null, NUTRICION_INICIAL), null);
-  const otra = metasNutricion(100, { kcalPorKg: 25, protPorKg: 1.6, grasaPorKg: 0.8, fibraPorKg: 0.3 });
-  assert.deepEqual(otra, { kcal: 2500, proteinas: 160, grasas: 80, fibra: 30, carbohidratos: 285 });
-});

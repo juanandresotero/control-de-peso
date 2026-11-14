@@ -1,10 +1,11 @@
 // Cuerpo: IMC, % de grasa (fórmula de la Marina de EE.UU., hombres, en cm) y medidas por zona. Funciones puras.
 
+// [clave, nombre, letra en la guía de medición (img/guia-medidas.jpg)]. El cuello no está en la guía.
 export const ZONAS = [
-  ["cuello", "Cuello"], ["hombros", "Hombros"], ["pecho", "Pecho"],
-  ["bicepRelajado", "Bíceps relajado"], ["bicepContraido", "Bíceps contraído"], ["antebrazo", "Antebrazo"],
-  ["muneca", "Muñeca"], ["abdomen", "Abdomen"], ["cintura", "Cintura"], ["cadera", "Cadera"],
-  ["muslo", "Muslo"], ["rodilla", "Rodilla"], ["gemelos", "Gemelos"],
+  ["cuello", "Cuello", ""], ["hombros", "Hombros", "A"], ["pecho", "Pecho", "B"],
+  ["bicepRelajado", "Bíceps relajado", "C1"], ["bicepContraido", "Bíceps contraído", "C2"], ["antebrazo", "Antebrazo", "D"],
+  ["muneca", "Muñeca", "E"], ["abdomen", "Abdomen", "F"], ["cintura", "Cintura", "G"], ["cadera", "Cadera", "H"],
+  ["muslo", "Muslo", "I"], ["rodilla", "Rodilla", "J"], ["gemelos", "Gemelos", "K"], ["tobillo", "Tobillo", "L"],
 ];
 
 const redondear1 = (n) => Math.round(n * 10) / 10;
@@ -84,19 +85,3 @@ export function resumenMedidas(medidas) {
   return resultado;
 }
 
-// Metas diarias de comida según el peso (las fórmulas del Excel del usuario; los factores se editan en Ajustes).
-export const NUTRICION_INICIAL = { kcalPorKg: 35, protPorKg: 2, grasaPorKg: 0.9, fibraPorKg: 0.5 };
-
-export function metasNutricion(pesoKg, factores) {
-  if (!pesoKg) return null;
-  const kcal = pesoKg * factores.kcalPorKg;
-  const proteinas = pesoKg * factores.protPorKg;
-  const grasas = pesoKg * factores.grasaPorKg;
-  return {
-    kcal: Math.round(kcal),
-    proteinas: Math.round(proteinas),
-    grasas: Math.round(grasas),
-    fibra: Math.round(pesoKg * factores.fibraPorKg),
-    carbohidratos: Math.max(0, Math.round((kcal - proteinas * 4 - grasas * 9) / 4)),
-  };
-}

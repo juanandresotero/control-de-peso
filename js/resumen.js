@@ -2,7 +2,7 @@
 import { resumenEtapa } from "./calculos.js";
 import { formatoCorto } from "./fechas.js";
 import { esc, kg, etapaPorDefecto, sinEtapas } from "./ui.js";
-import { imc, claseImc, claseGrasa, diagnostico, ultimaGrasa, resumenMedidas, metasNutricion, NUTRICION_INICIAL } from "./cuerpo.js";
+import { imc, claseImc, claseGrasa, diagnostico, ultimaGrasa, resumenMedidas } from "./cuerpo.js";
 
 let raiz;
 
@@ -44,11 +44,10 @@ export function pintar(ctx) {
       </div>
     </div>
     ${tarjetaCuerpo(datos, r.pesoActual)}
-    ${tarjetaComida(datos, r.pesoActual)}
     ${tarjetaMedidas(datos)}`;
 }
 
-// --- Debajo de lo principal: cuerpo, comida y medidas ---
+// --- Debajo de lo principal: cuerpo y medidas ---
 
 function tarjetaCuerpo(datos, pesoActual) {
   const altura = datos.perfil?.altura;
@@ -66,20 +65,6 @@ function tarjetaCuerpo(datos, pesoActual) {
   </div>`;
 }
 
-function tarjetaComida(datos, pesoActual) {
-  const m = metasNutricion(pesoActual, datos.perfil?.nutricion || NUTRICION_INICIAL);
-  if (!m) return "";
-  return `<div class="tarjeta">
-    <h2>Comida por día <span class="sutil" style="font-weight:400">(para ${kg(pesoActual)} kg)</span></h2>
-    <div class="stats chicas">
-      ${stat("Calorías", `${m.kcal}`, "kcal")}
-      ${stat("Proteínas", `${m.proteinas} g`)}
-      ${stat("Grasas", `${m.grasas} g`)}
-      ${stat("Fibra", `${m.fibra} g`)}
-      ${stat("Carbohidratos", `${m.carbohidratos} g`)}
-    </div>
-  </div>`;
-}
 
 function tarjetaMedidas(datos) {
   const zonas = resumenMedidas(datos.medidas || {});
