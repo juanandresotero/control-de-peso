@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Control de Peso</title>
+  <meta name="theme-color" content="#2e7d32">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="cabecera">
+    <h1>Control de Peso</h1>
+    <button id="estado-sync" class="estado-sync" title="Sincronización" aria-label="Sincronización">●</button>
+  </header>
+
+  <main>
+    <section id="pantalla-cargar" class="pantalla"></section>
+    <section id="pantalla-semanas" class="pantalla" hidden></section>
+    <section id="pantalla-resumen" class="pantalla" hidden></section>
+    <section id="pantalla-graficas" class="pantalla" hidden></section>
+    <section id="pantalla-ajustes" class="pantalla" hidden></section>
+  </main>
+
+  <nav class="pestanas">
+    <button data-ir="cargar" class="activa"><span>✏️</span>Cargar</button>
+    <button data-ir="semanas"><span>📅</span>Semanas</button>
+    <button data-ir="resumen"><span>🎯</span>Resumen</button>
+    <button data-ir="graficas"><span>📈</span>Gráficas</button>
+    <button data-ir="ajustes"><span>⚙️</span>Ajustes</button>
+  </nav>
+
+  <div id="aviso" class="aviso" role="status" hidden></div>
+
+  <script src="vendor/chart.umd.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
