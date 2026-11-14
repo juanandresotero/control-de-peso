@@ -174,6 +174,18 @@ package.json     — solo `"type": "module"` y el script de tests
 - Worker: prueba local con `wrangler dev` (GET vacío, POST versión 1, POST con base vieja → 409).
 - Prueba final en navegador (escritorio y tamaño celu) con Playwright.
 
+## Cuerpo y comida (agregado el 2026-11-13, pedido por el usuario)
+
+- `datos.perfil = { altura (cm), nutricion: { kcalPorKg, protPorKg, grasaPorKg, fibraPorKg }, mod }` — se edita en Ajustes.
+- `datos.medidas = { "YYYY-MM-DD": { cuello, hombros, pecho, bicepRelajado, bicepContraido, antebrazo, muneca, abdomen,
+  cintura, cadera, muslo, rodilla, gemelos, grasa?, mod } }` — se carga en Cargar (debajo de Guardar). `grasa` solo
+  para historial sin medidas. Se mezcla por fecha como los días (lápidas `medida:`).
+- % de grasa: fórmula de la Marina de EE.UU. para hombres **en cm** (el Excel usaba la de pulgadas con cm y daba ~6 puntos de más).
+- IMC con clasificación OMS; % de grasa con rangos ACE para hombres; diagnóstico combinado: el grado lo da el IMC,
+  el % de grasa dice si el exceso es grasa o músculo.
+- Comida por día = factores × peso actual; carbohidratos = calorías sobrantes / 4.
+- Resumen: al final, tarjetas Cuerpo, Comida por día y Medidas (primera, última y cambio por zona).
+
 ## Fuera de alcance (YAGNI)
 
-IMC, notas por día, fotos, recordatorios/notificaciones, varios usuarios.
+Notas por día, fotos, recordatorios/notificaciones, varios usuarios, registro de comidas.

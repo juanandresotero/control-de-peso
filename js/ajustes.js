@@ -1,5 +1,6 @@
 // Pantalla Ajustes: vincular aparatos, etapas y metas, respaldo.
-import { guardarEtapa, borrarEtapa, nuevoId, leerPeso, mezclar } from "./datos.js";
+import { guardarEtapa, borrarEtapa, nuevoId, leerPeso, mezclar, guardarPerfil } from "./datos.js";
+import { NUTRICION_INICIAL, leerCm } from "./cuerpo.js";
 import { esc, kg } from "./ui.js";
 import { descargarJson, descargarCsv, leerRespaldo } from "./respaldo.js";
 
@@ -31,6 +32,7 @@ export function pintar(ctx, opciones = {}) {
       ${etapas.map(formEtapa).join("")}
       <button class="boton" data-accion="nueva-etapa">+ Nueva etapa</button>
     </div>
+    ${formPerfil(datos.perfil)}
     <div class="tarjeta zona-respaldo">
       <h2>Respaldo</h2>
       <p class="sutil" style="margin-top:0">Bajá una copia de todo cada tanto. "Cargar respaldo" junta el archivo con lo que ya tenés (no borra nada).</p>
@@ -204,6 +206,12 @@ async function alTocar(ctx, e) {
     descargarJson(ctx.datos(), ctx.hoy());
   } else if (accion === "bajar-csv") {
     descargarCsv(ctx.datos(), ctx.hoy());
+  } else if (accion === "guardar-perfil") {
+    const r = leerFormPerfil();
+    const caja = raiz.querySelector("#p-msg");
+    if (r.error) { caja.textContent = r.error; caja.className = "mensaje error"; return; }
+    ctx.cambiar(guardarPerfil(ctx.datos(), r.perfil));
+    ctx.avisar("✓ Perfil guardado");
   }
 }
 
@@ -216,4 +224,38 @@ async function alCambiarArchivo(ctx, e) {
   } catch (error) {
     ctx.avisar(error.message);
   }
+}
+
+// --- Perfil: altura y factores de comida por kilo ---
+const FACTORES = [
+  ["kcalPorKg", "Calorías por kg"], ["protPorKg", "Proteínas (g por kg)"],
+  ["grasaPorKg", "Grasas (g por kg)"], ["fibraPorKg", "Fibra (g por kg)"],
+];
+
+function formPerfil(perfil) {
+  const nutricion = perfil?.nutricion || NUTRICION_INICIAL;
+  const numero = (n) => (n == null ? "" : String(n).replace(".", ","));
+  return `<div class="tarjeta zona-perfil">
+    <h2>Perfil</h2>
+    <div class="campos-perfil">
+      <label><span>Altura (cm)</span><input type="text" inputmode="decimal" id="p-altura" value="${numero(perfil?.altura)}" placeholder="167"></label>
+      ${FACTORES.map(([clave, etiqueta]) => `<label><span>${etiqueta}</span>
+        <input type="text" inputmode="decimal" data-factor="${clave}" value="${numero(nutricion[clave])}"></label>`).join("")}
+    </div>
+    <p class="sutil">Los carbohidratos son las calorías que sobran. La comida por día se recalcula sola con tu peso.</p>
+    <button class="boton principal" data-accion="guardar-perfil">Guardar perfil</button>
+    <div class="mensaje" id="p-msg"></div>
+  </div>`;
+}
+
+function leerFormPerfil() {
+  const altura = leerCm(raiz.querySelector("#p-altura").value);
+  if (!altura.ok || altura.valor == null || altura.valor < 100) return { error: "Poné tu altura en centímetros, por ejemplo 167." };
+  const nutricion = {};
+  for (const input of raiz.querySelectorAll("[data-factor]")) {
+    const valor = Number(input.value.trim().replace(",", "."));
+    if (!input.value.trim() || !Number.isFinite(valor) || valor < 0 || valor > 100) return { error: "Revisá los números de comida (por ejemplo 35 o 0,9)." };
+    nutricion[input.dataset.factor] = valor;
+  }
+  return { perfil: { altura: altura.valor, nutricion } };
 }

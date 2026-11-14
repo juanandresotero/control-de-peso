@@ -2,6 +2,7 @@
 import { resumenEtapa } from "./calculos.js";
 import { formatoCorto } from "./fechas.js";
 import { esc, kg, etapaPorDefecto, sinEtapas } from "./ui.js";
+import { imc, claseImc, claseGrasa, diagnostico, ultimaGrasa, resumenMedidas, metasNutricion, NUTRICION_INICIAL } from "./cuerpo.js";
 
 let raiz;
 
@@ -41,7 +42,61 @@ export function pintar(ctx) {
         ${stat("Semanas perfectas", `<span style="color:var(--verde)">${r.semanasOk} ✓</span> · <span style="color:var(--rojo)">${r.semanasMal} ✗</span>`)}
         ${stat("Racha", `${r.racha} ${r.racha === 1 ? "semana" : "semanas"}`, estaSemana(r))}
       </div>
-    </div>`;
+    </div>
+    ${tarjetaCuerpo(datos, r.pesoActual)}
+    ${tarjetaComida(datos, r.pesoActual)}
+    ${tarjetaMedidas(datos)}`;
+}
+
+// --- Debajo de lo principal: cuerpo, comida y medidas ---
+
+function tarjetaCuerpo(datos, pesoActual) {
+  const altura = datos.perfil?.altura;
+  if (!altura) return `<div class="tarjeta sutil">Para ver IMC y % de grasa, <a href="#" data-ir-ajustes>poné tu altura en Ajustes</a>.</div>`;
+  const valorImc = imc(pesoActual, altura);
+  const grasa = ultimaGrasa(datos.medidas || {}, altura);
+  return `<div class="tarjeta">
+    <h2>Cuerpo</h2>
+    <div class="stats">
+      ${stat("IMC", kg(valorImc), claseImc(valorImc))}
+      ${stat("% de grasa", grasa ? `${kg(grasa.valor)}%` : "—",
+        grasa ? `${claseGrasa(grasa.valor)} · medido ${formatoCorto(grasa.fecha)}/${grasa.fecha.slice(2, 4)}` : "cargá cintura y cuello")}
+    </div>
+    <p class="diagnostico">${esc(diagnostico(valorImc, grasa ? grasa.valor : null))}</p>
+  </div>`;
+}
+
+function tarjetaComida(datos, pesoActual) {
+  const m = metasNutricion(pesoActual, datos.perfil?.nutricion || NUTRICION_INICIAL);
+  if (!m) return "";
+  return `<div class="tarjeta">
+    <h2>Comida por día <span class="sutil" style="font-weight:400">(para ${kg(pesoActual)} kg)</span></h2>
+    <div class="stats chicas">
+      ${stat("Calorías", `${m.kcal}`, "kcal")}
+      ${stat("Proteínas", `${m.proteinas} g`)}
+      ${stat("Grasas", `${m.grasas} g`)}
+      ${stat("Fibra", `${m.fibra} g`)}
+      ${stat("Carbohidratos", `${m.carbohidratos} g`)}
+    </div>
+  </div>`;
+}
+
+function tarjetaMedidas(datos) {
+  const zonas = resumenMedidas(datos.medidas || {});
+  if (!zonas.length) return "";
+  const dif = (d) => (d == null ? "" : `<span class="${d < 0 ? "baja" : d > 0 ? "sube" : ""}">${d > 0 ? "+" : ""}${kg(d)}</span>`);
+  const fecha = (f) => `${formatoCorto(f)}/${f.slice(2, 4)}`;
+  return `<div class="tarjeta ancho-completo">
+    <h2>Medidas <span class="sutil" style="font-weight:400">(cm)</span></h2>
+    <table class="tabla-medidas">
+      <thead><tr><th>Zona</th><th>Primera</th><th>Última</th><th>Cambio</th></tr></thead>
+      <tbody>${zonas.map((z) => `<tr>
+        <td>${esc(z.etiqueta)}</td>
+        <td>${kg(z.primera.valor)} <small>${fecha(z.primera.fecha)}</small></td>
+        <td>${z.diferencia == null ? "" : `${kg(z.ultima.valor)} <small>${fecha(z.ultima.fecha)}</small>`}</td>
+        <td>${dif(z.diferencia)}</td></tr>`).join("")}</tbody>
+    </table>
+  </div>`;
 }
 
 // "−0,45 kg" si bajó, "+0,02 kg" si subió

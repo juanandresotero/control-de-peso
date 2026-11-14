@@ -14,7 +14,7 @@ export const COMIDAS = {
 };
 
 export function vacio() {
-  return { version: 1, dias: {}, etapas: [], marcasSemana: {}, tombs: {} };
+  return { version: 1, dias: {}, etapas: [], marcasSemana: {}, medidas: {}, perfil: null, tombs: {} };
 }
 
 export function validarRespaldo(obj) {
@@ -70,6 +70,24 @@ export function borrarEtapa(datos, id, ahora = Date.now()) {
   };
 }
 
+// Medidas del cuerpo de un día (cm por zona). Sin ningún valor = se borra ese día.
+export function guardarMedidas(datos, fecha, valores, ahora = Date.now()) {
+  const limpias = Object.fromEntries(Object.entries(valores).filter(([, v]) => v != null));
+  if (!Object.keys(limpias).length) return borrarMedidas(datos, fecha, ahora);
+  return { ...datos, medidas: { ...datos.medidas, [fecha]: { ...limpias, mod: ahora } } };
+}
+
+export function borrarMedidas(datos, fecha, ahora = Date.now()) {
+  const medidas = { ...datos.medidas };
+  delete medidas[fecha];
+  return { ...datos, medidas, tombs: { ...datos.tombs, ["medida:" + fecha]: ahora } };
+}
+
+// Perfil: altura (cm) y factores de nutrición.
+export function guardarPerfil(datos, perfil, ahora = Date.now()) {
+  return { ...datos, perfil: { ...(datos.perfil || {}), ...perfil, mod: ahora } };
+}
+
 export function nuevoId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
@@ -85,11 +103,18 @@ export function mezclar(a, b, ahora = Date.now()) {
   }
   const vivo = (clave, item) => !(tombs[clave] && tombs[clave] >= (item.mod || 0));
 
-  const dias = { ...(a.dias || {}) };
-  for (const [fecha, dia] of Object.entries(b.dias || {})) {
-    if (!dias[fecha] || (dia.mod || 0) > (dias[fecha].mod || 0)) dias[fecha] = dia;
-  }
-  for (const fecha of Object.keys(dias)) if (!vivo("dia:" + fecha, dias[fecha])) delete dias[fecha];
+  // Días y medidas: por fecha, gana el `mod` más reciente; después se aplican las lápidas.
+  const porFecha = (deA, deB, prefijo) => {
+    const juntos = { ...(deA || {}) };
+    for (const [fecha, item] of Object.entries(deB || {})) {
+      if (!juntos[fecha] || (item.mod || 0) > (juntos[fecha].mod || 0)) juntos[fecha] = item;
+    }
+    for (const fecha of Object.keys(juntos)) if (!vivo(prefijo + fecha, juntos[fecha])) delete juntos[fecha];
+    return juntos;
+  };
+  const dias = porFecha(a.dias, b.dias, "dia:");
+  const medidas = porFecha(a.medidas, b.medidas, "medida:");
+  const perfil = !a.perfil ? b.perfil || null : !b.perfil ? a.perfil : (b.perfil.mod || 0) > (a.perfil.mod || 0) ? b.perfil : a.perfil;
 
   const etapas = new Map((a.etapas || []).map((e) => [e.id, e]));
   for (const etapa of b.etapas || []) {
@@ -102,6 +127,8 @@ export function mezclar(a, b, ahora = Date.now()) {
     dias,
     etapas: [...etapas.values()].filter((e) => vivo("etapa:" + e.id, e)).sort(porInicio),
     marcasSemana: { ...(b.marcasSemana || {}), ...(a.marcasSemana || {}) },
+    medidas,
+    perfil,
     tombs,
   };
 }

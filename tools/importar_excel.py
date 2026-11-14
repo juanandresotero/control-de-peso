@@ -5,6 +5,7 @@ Genera importado/respaldo-inicial.json (NO se sube a GitHub) y muestra un inform
 Después, en la app: Ajustes → Cargar respaldo → elegir ese archivo.
 """
 import json
+import math
 import sys
 import time
 import warnings
@@ -25,6 +26,26 @@ ROJO, CELESTE, AMARILLO = "FFFF0000", "FF00B0F0", "FFFFFF00"
 
 # Tramos que el usuario rellenó a mano para que la gráfica no quede con huecos.
 ESTIMADOS = [(date(2025, 9, 8), date(2025, 11, 16)), (date(2025, 12, 15), date(2026, 3, 1))]
+
+
+# Datos del cuerpo que el usuario tenía en otra planilla (captura del 2026-11-13).
+ALTURA_CM = 167
+NUTRICION = {"kcalPorKg": 35, "protPorKg": 2, "grasaPorKg": 0.9, "fibraPorKg": 0.5}
+MEDIDAS = {
+    "2026-03-02": {"cintura": 124, "cuello": 41},
+    "2026-04-27": {"hombros": 51, "pecho": 117, "bicepRelajado": 37, "bicepContraido": 43.5, "antebrazo": 39,
+                   "muneca": 18.6, "abdomen": 117, "cintura": 120, "cadera": 117, "muslo": 74, "rodilla": 39,
+                   "gemelos": 41},
+    "2026-08-04": {"cintura": 105, "cuello": 41},
+}
+
+
+def grasa_corregida(porcentaje_viejo, altura=ALTURA_CM, cuello=41):
+    """El 14/05/2026 solo quedó el % (43,3) calculado con la fórmula en pulgadas usada con cm.
+    Se despeja la cintura de esa fórmula y se recalcula con la fórmula correcta en cm."""
+    cintura = cuello + 10 ** ((porcentaje_viejo - 36.76 + 70.041 * math.log10(altura)) / 86.010)
+    densidad = 1.0324 - 0.19077 * math.log10(cintura - cuello) + 0.15456 * math.log10(altura)
+    return round(495 / densidad - 450, 1)
 
 
 def lunes_de_fila(fila):
@@ -117,7 +138,11 @@ def importar(ruta_excel, hoy=None, ahora_ms=None):
              {"id": "m-ideal", "nombre": "Peso ideal", "peso": 75, "fecha": None},
          ], "mod": ahora_ms},
     ]
-    datos = {"version": 1, "dias": dias, "etapas": etapas, "marcasSemana": marcas, "tombs": {}}
+    medidas = {fecha: {**valores, "mod": ahora_ms} for fecha, valores in MEDIDAS.items()}
+    medidas["2026-05-14"] = {"grasa": grasa_corregida(43.3), "mod": ahora_ms}
+    perfil = {"altura": ALTURA_CM, "nutricion": NUTRICION, "mod": ahora_ms}
+    datos = {"version": 1, "dias": dias, "etapas": etapas, "marcasSemana": marcas,
+             "medidas": medidas, "perfil": perfil, "tombs": {}}
     return datos, informe
 
 

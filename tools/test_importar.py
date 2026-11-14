@@ -44,6 +44,13 @@ class TestImportar(unittest.TestCase):
         metas = self.datos["etapas"][1]["metas"]
         self.assertEqual([(m["peso"], m["fecha"]) for m in metas], [(83.6, None), (75, None)])
 
+    def test_cuerpo(self):
+        medidas = self.datos["medidas"]
+        self.assertEqual(sorted(medidas), ["2026-03-02", "2026-04-27", "2026-05-14", "2026-08-04"])
+        self.assertEqual(medidas["2026-04-27"]["bicepContraido"], 43.5)
+        self.assertEqual(medidas["2026-05-14"]["grasa"], 37.1)
+        self.assertEqual(self.datos["perfil"]["altura"], 167)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -101,3 +101,20 @@ test("aCsv para abrir en Excel", () => {
   assert.equal(lineas[1], "2026-11-12;;no fue falta de voluntad;no;no");
   assert.equal(lineas[2], "2026-11-13;95,5;plato malo;sí;no");
 });
+
+test("medidas: guardar, borrar y mezclar entre aparatos", async () => {
+  const { guardarMedidas, borrarMedidas, guardarPerfil } = await import("../js/datos.js");
+  let d = guardarMedidas(vacio(), "2026-08-04", { cintura: 105, cuello: 41, pecho: null }, AHORA);
+  assert.deepEqual(d.medidas["2026-08-04"], { cintura: 105, cuello: 41, mod: AHORA });
+  assert.equal(guardarMedidas(d, "2026-08-04", { cintura: null }, AHORA + 1).medidas["2026-08-04"], undefined); // vacío = borrar
+  const otro = guardarMedidas(vacio(), "2026-09-01", { pecho: 110 }, AHORA + 5);
+  const m = mezclar(d, otro, AHORA + 10);
+  assert.deepEqual(Object.keys(m.medidas).sort(), ["2026-08-04", "2026-09-01"]);
+  const borrado = borrarMedidas(m, "2026-09-01", AHORA + 20);
+  assert.equal(mezclar(m, borrado, AHORA + 30).medidas["2026-09-01"], undefined);
+
+  const p1 = guardarPerfil(vacio(), { altura: 167 }, AHORA);
+  const p2 = guardarPerfil(vacio(), { altura: 168 }, AHORA + 1);
+  assert.equal(mezclar(p1, p2, AHORA + 2).perfil.altura, 168);
+  assert.equal(mezclar(p1, vacio(), AHORA + 2).perfil.altura, 167);
+});

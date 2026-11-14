@@ -3,6 +3,7 @@ import { leerPeso, guardarDia, borrarDia } from "./datos.js";
 import { etapaDe, numeroSemana } from "./calculos.js";
 import { sumarDias, formatoLargo } from "./fechas.js";
 import { kg } from "./ui.js";
+import { htmlMedidas, iniciarMedidas, prellenarMedidas } from "./cargar-medidas.js";
 
 const OPCIONES_COMIDA = [
   { valor: "bien", icono: "✅", texto: "Comí bien" },
@@ -42,7 +43,9 @@ export function iniciar(ctx, elemento) {
       <button class="boton principal ancho" id="c-guardar">Guardar</button>
       <div class="mensaje" id="c-mensaje"></div>
       <button class="boton peligro" id="c-borrar" hidden>Borrar este día</button>
-    </div>`;
+    </div>
+    ${htmlMedidas()}`;
+  iniciarMedidas(ctx, raiz, () => fecha);
 
   raiz.querySelector("#c-fecha").addEventListener("change", (e) => {
     if (e.target.value) { fecha = e.target.value; prellenar(ctx); }
@@ -90,6 +93,7 @@ function prellenar(ctx, conservarMensaje = false) {
     ? `Último peso: ${kg(anterior.peso)} kg (${formatoLargo(anterior.fecha)})` + (dia && dia.estimado ? " · este día era de relleno" : "")
     : "";
   pintarOpciones();
+  prellenarMedidas(ctx);
 }
 
 function ultimoPesoAntes(datos, hasta) {
