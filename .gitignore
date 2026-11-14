@@ -1,0 +1,6 @@
+*.xlsx
+.~lock*
+importado/
+node_modules/
+__pycache__/
+worker/.wrangler/
