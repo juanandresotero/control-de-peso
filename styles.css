@@ -130,12 +130,30 @@ select { width: 100%; }
 .dato b { display: block; font-size: 1.25rem; }
 .alerta { background: #fff3e0; border-left: 4px solid #f57c00; padding: 8px 12px; border-radius: 6px; }
 .barra { height: 14px; background: #eee; border-radius: 7px; overflow: hidden; margin: 8px 0; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.stat { background: var(--fondo); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.stat > span { color: var(--gris); font-size: .85rem; }
+.stat b { font-size: 1.6rem; line-height: 1.2; }
+.stat small { color: var(--gris); font-size: .8rem; }
+.objetivo-fila { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 12px; }
+.chip { padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: .9rem; }
+.chip.ok { background: var(--verde-claro); color: var(--verde); }
+.chip.mal { background: #ffebee; color: var(--rojo); }
+.tarjeta a { color: var(--verde); }
 .barra div { height: 100%; background: var(--verde); }
 
 /* --- Gráficas --- */
 .grafica { position: relative; height: 300px; }
 .rango { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: end; margin-bottom: 8px; }
 .rango > div { display: flex; flex-direction: column; min-width: 0; }
+.eje { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+.eje > span { grid-column: 1 / -1; }
+.eje > div { display: flex; flex-direction: column; min-width: 0; }
+.eje input { width: 100%; min-width: 0; text-align: center; }
+@media (min-width: 700px) {
+  .eje { grid-template-columns: auto 120px 120px auto; justify-content: start; }
+  .eje > span { grid-column: auto; align-self: center; }
+}
 
 /* --- Ajustes --- */
 .etapa-form { border: 1px solid var(--borde); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
@@ -214,7 +232,6 @@ select { width: 100%; }
     grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
   }
   .ancho-completo { grid-column: 1 / -1; }
-  #pantalla-resumen .datos-grid { grid-template-columns: 1fr 1fr; }
   #pantalla-semanas > .ancho-completo select, #pantalla-resumen > .ancho-completo select { max-width: 420px; }
 
   /* Gráficas: a todo el ancho y más altas. */
@@ -238,4 +255,9 @@ select { width: 100%; }
   .opciones { grid-template-columns: repeat(4, 1fr); }
   .datos-grid { grid-template-columns: repeat(4, 1fr); }
   .grafica { height: 380px; }
+}
+
+@media (max-width: 699px) {
+  .stat.destacado { grid-column: 1 / -1; }
+  .stat.destacado b { font-size: 2.2rem; }
 }

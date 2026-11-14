@@ -70,21 +70,31 @@ function ritmoUltimas4(semanas) {
   return null;
 }
 
-function resumenMeta(meta, { pesoInicial, pesoActual, fechaActual, promedioSemanal, hoy }) {
+const DIAS_POR_MES = 30.4375;
+
+// La estimación usa el ritmo del último mes (`ritmo4`, kg por semana), que dice mejor cómo venís ahora.
+// estado: "logrado" | "vencido" | "bien" | "atrasado" | null (sin día objetivo).
+function resumenMeta(meta, { pesoInicial, pesoActual, fechaActual, ritmo4, hoy }) {
   const faltan = redondear1(pesoActual - meta.peso);
   const total = pesoInicial - meta.peso;
   const avance = total > 0 ? Math.min(1, Math.max(0, (pesoInicial - pesoActual) / total)) : 1;
   const alcanzada = faltan <= 0;
-  const fechaEstimada = !alcanzada && promedioSemanal > 0
-    ? sumarDias(fechaActual, Math.ceil((faltan / promedioSemanal) * 7))
-    : null;
-  let semanasRestantes = null, kgPorSemana = null, vencida = false;
+  const semanas = !alcanzada && ritmo4 > 0 ? faltan / ritmo4 : null;
+  const semanasParaLlegar = semanas == null ? null : redondear1(semanas);
+  const mesesParaLlegar = semanas == null ? null : redondear1((semanas * 7) / DIAS_POR_MES);
+  const fechaEstimada = semanas == null ? null : sumarDias(fechaActual, Math.ceil(semanas * 7));
+  let semanasRestantes = null, kgPorSemana = null, vencida = false, estado = alcanzada ? "logrado" : null;
   if (meta.fecha) {
     vencida = !alcanzada && meta.fecha < hoy;
     semanasRestantes = redondear1(diasEntre(hoy, meta.fecha) / 7);
     if (!alcanzada && semanasRestantes > 0) kgPorSemana = Math.round((faltan / semanasRestantes) * 100) / 100;
+    if (vencida) estado = "vencido";
+    else if (!alcanzada) estado = ritmo4 != null && kgPorSemana != null && ritmo4 >= kgPorSemana ? "bien" : "atrasado";
   }
-  return { meta, faltan, avance, alcanzada, fechaEstimada, semanasRestantes, kgPorSemana, vencida };
+  return {
+    meta, faltan, avance, alcanzada, semanasParaLlegar, mesesParaLlegar, fechaEstimada,
+    semanasRestantes, kgPorSemana, vencida, estado,
+  };
 }
 
 export function resumenEtapa(datos, etapa, hoy) {
@@ -107,14 +117,15 @@ export function resumenEtapa(datos, etapa, hoy) {
   let racha = 0;
   for (let i = cerradas.length - 1; i >= 0 && cerradas[i].marca === "✓"; i--) racha++;
 
-  const contexto = { pesoInicial, pesoActual, fechaActual, promedioSemanal, hoy };
+  const ritmo4 = ritmoUltimas4(semanas);
+  const contexto = { pesoInicial, pesoActual, fechaActual, ritmo4, hoy };
   return {
     pesoInicial, pesoActual, fechaActual, mejorPeso,
     kilosPerdidos: redondear1(pesoInicial - pesoActual),
     porcentaje: pesoInicial ? redondear1(pesoInicial - pesoActual) / pesoInicial : 0,
     semanaNumero: numeroSemana(ultimoDia, etapa),
     promedioSemanal,
-    ritmo4: ritmoUltimas4(semanas),
+    ritmo4,
     semanasOk: cerradas.filter((s) => s.marca === "✓").length,
     semanasMal: cerradas.filter((s) => s.marca === "✗").length,
     racha,

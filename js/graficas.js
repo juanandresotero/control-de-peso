@@ -4,24 +4,48 @@
 // Solo se dibujan pesos reales; donde faltan días o eran relleno, la línea se une punteada.
 import { listaSemanas, rangoEtapa, serieDiaria, numeroSemana } from "./calculos.js";
 import { formatoCorto, formatoLargo, lunesDe, diasEntre } from "./fechas.js";
+import { leerPeso } from "./datos.js";
 import { esc, kg, etapaPorDefecto, sinEtapas } from "./ui.js";
 
 const COLOR_LINEA = "#2e7d32";
 const COLORES_META = ["#f57c00", "#6a1b9a", "#0277bd", "#c62828"];
+const CLAVE_EJE = "control_peso_eje"; // máximo y mínimo del eje de peso, guardado en este aparato
 
 let raiz;
 let graficasDieta = [], graficaRango = null;
 let rangoElegido = { desde: null, hasta: null }; // null = por defecto (primer registro / hoy)
+let eje = leerEje();
+
+function leerEje() {
+  try { return { min: null, max: null, ...JSON.parse(localStorage.getItem(CLAVE_EJE)) }; } catch { return { min: null, max: null }; }
+}
+
+function cambiarEje(ctx) {
+  const max = leerPeso(raiz.querySelector("#g-max").value);
+  const min = leerPeso(raiz.querySelector("#g-min").value);
+  const msg = raiz.querySelector("#g-eje-msg");
+  if (!max.ok || !min.ok) { msg.textContent = (max.ok ? min : max).error; return; }
+  if (max.valor != null && min.valor != null && min.valor >= max.valor) { msg.textContent = "El mínimo tiene que ser menor que el máximo."; return; }
+  eje = { min: min.valor, max: max.valor };
+  try { localStorage.setItem(CLAVE_EJE, JSON.stringify(eje)); } catch { /* sin guardado: igual se aplica */ }
+  pintar(ctx);
+}
 
 export function iniciar(ctx, elemento) {
   raiz = elemento;
   raiz.addEventListener("change", (e) => {
+    if (e.target.id === "g-max" || e.target.id === "g-min") return cambiarEje(ctx);
     if (e.target.id === "g-desde") rangoElegido.desde = e.target.value || null;
     else if (e.target.id === "g-hasta") rangoElegido.hasta = e.target.value || null;
     else return;
     pintarRango(ctx);
   });
   raiz.addEventListener("click", (e) => {
+    if (e.target.closest("[data-accion=eje-auto]")) {
+      raiz.querySelector("#g-max").value = "";
+      raiz.querySelector("#g-min").value = "";
+      return cambiarEje(ctx);
+    }
     if (!e.target.closest("[data-accion=rango-todo]")) return;
     rangoElegido = { desde: null, hasta: null };
     pintarRango(ctx);
@@ -40,7 +64,10 @@ function opcionesBase() {
       legend: { labels: { boxWidth: 14, filter: (item) => !item.text.startsWith("_") } },
       tooltip: { callbacks: { label: (c) => (c.parsed.y == null ? "" : `${c.dataset.label.replace(/^_/, "")}: ${kg(c.parsed.y)} kg`) } },
     },
-    scales: { y: { ticks: { callback: (v) => kg(v) } }, x: { ticks: { maxRotation: 0, autoSkipPadding: 12 } } },
+    scales: {
+      y: { min: eje.min ?? undefined, max: eje.max ?? undefined, ticks: { callback: (v) => kg(v) } },
+      x: { ticks: { maxRotation: 0, autoSkipPadding: 12 } },
+    },
   };
 }
 
@@ -116,6 +143,15 @@ export function pintar(ctx) {
   const etapa = etapaPorDefecto(datos, hoy);
 
   raiz.innerHTML = `
+    <div class="tarjeta">
+      <div class="eje">
+        <span class="sutil">Escala del peso (las 3 gráficas)</span>
+        <div><label class="sutil" for="g-max">Máximo</label><input type="text" inputmode="decimal" id="g-max" placeholder="auto" value="${eje.max != null ? kg(eje.max) : ""}"></div>
+        <div><label class="sutil" for="g-min">Mínimo</label><input type="text" inputmode="decimal" id="g-min" placeholder="auto" value="${eje.min != null ? kg(eje.min) : ""}"></div>
+        <button class="boton" data-accion="eje-auto">Automático</button>
+      </div>
+      <div class="mensaje error" id="g-eje-msg"></div>
+    </div>
     ${etapa ? `
     <div class="tarjeta">
       <h2>${esc(etapa.nombre)} · semana a semana</h2>

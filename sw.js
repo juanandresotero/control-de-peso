@@ -1,6 +1,6 @@
 // Service worker: deja abrir la app sin internet.
 // Red primero (así siempre ves la última versión) y, si no hay conexión, lo guardado.
-const CACHE = "control-peso-v3";
+const CACHE = "control-peso-v4";
 const ARCHIVOS = [
   "./", "index.html", "styles.css", "manifest.webmanifest", "icon-192.png", "icon-512.png",
   "vendor/chart.umd.min.js",
@@ -22,7 +22,7 @@ self.addEventListener("fetch", (e) => {
   const pedido = e.request;
   if (pedido.method !== "GET" || new URL(pedido.url).origin !== location.origin) return; // la sincronización va directo
   e.respondWith(
-    fetch(pedido)
+    fetch(pedido, { cache: "no-cache" }) // siempre pregunta si hay versión nueva (no usa la copia vieja del navegador)
       .then((resp) => {
         if (resp.ok) { const copia = resp.clone(); caches.open(CACHE).then((c) => c.put(pedido, copia)); }
         return resp;

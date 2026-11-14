@@ -1,99 +1,100 @@
-// Pantalla Resumen: el panel de objetivos del Excel, pero bien calculado.
+// Pantalla Resumen: los números que importan de la dieta actual, con poco texto.
 import { resumenEtapa } from "./calculos.js";
-import { formatoLargo, diasEntre } from "./fechas.js";
-import { esc, kg, etapaPorDefecto, opcionesEtapa, sinEtapas } from "./ui.js";
+import { formatoCorto } from "./fechas.js";
+import { esc, kg, etapaPorDefecto, sinEtapas } from "./ui.js";
 
-let raiz, elegida = null;
+let raiz;
 
 export function iniciar(ctx, elemento) {
   raiz = elemento;
-  raiz.addEventListener("change", (e) => {
-    if (e.target.id === "r-etapa") { elegida = e.target.value; pintar(ctx); }
+  raiz.addEventListener("click", (e) => {
+    if (!e.target.closest("[data-ir-ajustes]")) return;
+    e.preventDefault();
+    ctx.irA("ajustes");
   });
 }
+
+const stat = (etiqueta, valor, extra = "", clase = "") =>
+  `<div class="stat ${clase}"><span>${etiqueta}</span><b>${valor}</b>${extra ? `<small>${extra}</small>` : ""}</div>`;
 
 export function pintar(ctx) {
   const datos = ctx.datos();
   const hoy = ctx.hoy();
-  if (!datos.etapas.length) { raiz.innerHTML = sinEtapas(); return; }
-  if (!datos.etapas.some((e) => e.id === elegida)) elegida = etapaPorDefecto(datos, hoy).id;
-  const etapa = datos.etapas.find((e) => e.id === elegida);
+  const etapa = etapaPorDefecto(datos, hoy);
+  if (!etapa) { raiz.innerHTML = sinEtapas(); return; }
   const r = resumenEtapa(datos, etapa, hoy);
+  const bajo = r.kilosPerdidos >= 0;
 
   raiz.innerHTML = `
-    <div class="tarjeta ancho-completo"><select id="r-etapa">${opcionesEtapa(datos, elegida, false)}</select></div>
-
     ${alertaRitmo(r)}
-
     <div class="tarjeta">
-      <div class="sutil">Peso actual · ${formatoLargo(r.fechaActual)}</div>
-      <div class="grande">${kg(r.pesoActual)} kg</div>
-      <div>${r.kilosPerdidos >= 0 ? "Bajaste" : "Subiste"} <b>${kg(Math.abs(r.kilosPerdidos))} kg</b>
-        (${kg(Math.abs(r.porcentaje) * 100)}%) desde ${kg(r.pesoInicial)} kg</div>
-      <div class="sutil" style="margin-top:4px">Semana ${r.semanaNumero} de ${esc(etapa.nombre)} · empezó el ${formatoLargo(etapa.inicio)}</div>
-    </div>
-
-    <div class="tarjeta">
-      <div class="datos-grid">
-        <div class="dato"><span class="sutil">Promedio por semana</span><b>${kgSemana(r.promedioSemanal)}</b></div>
-        <div class="dato"><span class="sutil">Últimas 4 semanas</span><b>${kgSemana(r.ritmo4)}</b></div>
-        <div class="dato"><span class="sutil">Mejor peso</span><b>${kg(r.mejorPeso)} kg</b></div>
-        <div class="dato"><span class="sutil">Peso inicial</span><b>${kg(r.pesoInicial)} kg</b></div>
+      <div class="stats">
+        ${stat("Peso actual", `${kg(r.pesoActual)} kg`, formatoCorto(r.fechaActual), "destacado")}
+        ${stat(bajo ? "Bajaste" : "Subiste", `${kg(Math.abs(r.kilosPerdidos))} kg`, `${kg(Math.abs(r.porcentaje) * 100)}% · semana ${r.semanaNumero}`)}
+        ${stat("Ritmo último mes", ritmo(r.ritmo4), "por semana")}
       </div>
     </div>
-
+    ${r.metas.length ? r.metas.map(tarjetaMeta).join("")
+      : `<div class="tarjeta sutil">Sin metas. <a href="#" data-ir-ajustes>Agregalas en Ajustes</a>.</div>`}
     <div class="tarjeta">
-      <h2>Semanas perfectas</h2>
-      <div class="datos-grid">
-        <div class="dato"><span class="sutil">Perfectas</span><b style="color:var(--verde)">${r.semanasOk} ✓</b></div>
-        <div class="dato"><span class="sutil">Con algún desliz</span><b style="color:var(--rojo)">${r.semanasMal} ✗</b></div>
-        <div class="dato"><span class="sutil">Racha actual</span><b>${r.racha} ${r.racha === 1 ? "semana" : "semanas"}</b></div>
-        <div class="dato"><span class="sutil">Esta semana</span><b>${estaSemana(r)}</b></div>
+      <div class="stats">
+        ${stat("Semanas perfectas", `<span style="color:var(--verde)">${r.semanasOk} ✓</span> · <span style="color:var(--rojo)">${r.semanasMal} ✗</span>`)}
+        ${stat("Racha", `${r.racha} ${r.racha === 1 ? "semana" : "semanas"}`, estaSemana(r))}
       </div>
-    </div>
-
-    ${r.metas.length ? r.metas.map((m) => tarjetaMeta(m, hoy)).join("") : `<div class="tarjeta sutil">Sin metas. Agregalas en ⚙️ Ajustes.</div>`}`;
+    </div>`;
 }
 
-const kgSemana = (n) => (n == null ? "—" : `${n > 0 ? "−" : n < 0 ? "+" : ""}${kg(Math.abs(n), 2)} kg`);
+// "−0,45 kg" si bajó, "+0,02 kg" si subió
+const ritmo = (n) => (n == null ? "—" : `${n > 0 ? "−" : n < 0 ? "+" : ""}${kg(Math.abs(n), 2)} kg`);
 
 function alertaRitmo(r) {
-  if (r.ritmo4 == null) return "";
-  if (r.ritmo4 < 0) return `<div class="alerta ancho-completo">⚠️ En las últimas 4 semanas <b>subiste</b> ${kg(-r.ritmo4, 2)} kg por semana.</div>`;
-  if (r.ritmo4 <= 0.1) return `<div class="alerta ancho-completo">⚠️ Estás <b>estancado</b>: en las últimas 4 semanas bajaste ${kg(r.ritmo4, 2)} kg por semana.</div>`;
-  return "";
+  if (r.ritmo4 == null || r.ritmo4 > 0.1) return "";
+  return `<div class="alerta ancho-completo">⚠️ ${r.ritmo4 < 0 ? "El último mes subiste" : "Estás estancado"}</div>`;
 }
 
 function estaSemana(r) {
   const s = r.semanaEnCurso;
-  if (!s || !s.marca) return "—";
-  return s.marca === "✗" ? "✗" : "✓ por ahora";
+  if (!s || !s.marca) return "";
+  return s.marca === "✗" ? "esta semana ✗" : "esta semana ✓ por ahora";
 }
 
-function tarjetaMeta(m, hoy) {
-  const { meta } = m;
-  let ritmo;
-  if (m.alcanzada) ritmo = `🎉 ¡Meta alcanzada!`;
-  else if (m.fechaEstimada) {
-    const semanas = Math.round(diasEntre(hoy, m.fechaEstimada) / 7);
-    ritmo = `A tu ritmo llegás aprox. el <b>${formatoLargo(m.fechaEstimada)}</b> (en ${semanas} ${semanas === 1 ? "semana" : "semanas"})`;
-  } else ritmo = `A este ritmo no llegás: hace falta volver a bajar.`;
+const ESTADOS = {
+  logrado: ["ok", "🎉 Logrado"],
+  bien: ["ok", "✅ Vas bien"],
+  atrasado: ["mal", "⏳ Atrasado"],
+  vencido: ["mal", "⛔ Fecha vencida"],
+};
 
-  let objetivo = "";
-  if (meta.fecha) {
-    if (m.alcanzada) objetivo = `Día objetivo: ${formatoLargo(meta.fecha)}`;
-    else if (m.vencida) objetivo = `Día objetivo: ${formatoLargo(meta.fecha)} · <b style="color:var(--rojo)">vencido</b>. Poné una fecha nueva en Ajustes.`;
-    else {
-      const comparacion = m.fechaEstimada && m.fechaEstimada <= meta.fecha ? "✅ vas a tiempo" : "⏳ vas atrasado";
-      objetivo = `Día objetivo: <b>${formatoLargo(meta.fecha)}</b> (faltan ${kg(m.semanasRestantes)} semanas) · necesitás bajar ${kg(m.kgPorSemana, 2)} kg por semana · ${comparacion}`;
-    }
+function tarjetaMeta(m) {
+  const { meta } = m;
+  const pct = Math.round(m.avance * 100);
+  const llegada = m.alcanzada ? "¡Listo!"
+    : m.semanasParaLlegar == null ? "—"
+    : `${kg(m.semanasParaLlegar, m.semanasParaLlegar < 10 ? 1 : 0)} sem`;
+  const llegadaExtra = m.alcanzada || m.semanasParaLlegar == null
+    ? (m.alcanzada ? "" : "el último mes no bajaste")
+    : `${kg(m.mesesParaLlegar)} meses · ${formatoCorto(m.fechaEstimada)}/${m.fechaEstimada.slice(2, 4)}`;
+
+  let objetivo;
+  if (!meta.fecha) {
+    objetivo = `<p class="sutil" style="margin:10px 0 0"><a href="#" data-ir-ajustes>Poné un día objetivo</a> para saber si vas bien.</p>`;
+  } else {
+    const [clase, texto] = ESTADOS[m.estado];
+    const necesita = m.kgPorSemana != null ? `Necesitás <b>−${kg(m.kgPorSemana, 2)} kg</b> por semana` : "";
+    objetivo = `<div class="objetivo-fila">
+      <span class="chip ${clase}">${texto}</span>
+      <span class="sutil">Objetivo ${formatoCorto(meta.fecha)}/${meta.fecha.slice(2, 4)}</span>
+      ${necesita ? `<span>${necesita}</span>` : ""}
+    </div>`;
   }
+
   return `<div class="tarjeta">
-    <h2>🎯 ${esc(meta.nombre)}: ${kg(meta.peso)} kg</h2>
-    <div class="barra"><div style="width:${Math.round(m.avance * 100)}%"></div></div>
-    <div class="fila"><span class="crece">${Math.round(m.avance * 100)}% del camino</span>
-      <b>${m.alcanzada ? "" : `Faltan ${kg(m.faltan)} kg`}</b></div>
-    <p style="margin:8px 0 0">${ritmo}</p>
-    ${objetivo ? `<p class="sutil" style="margin:6px 0 0">${objetivo}</p>` : ""}
+    <h2>🎯 ${esc(meta.nombre)} · ${kg(meta.peso)} kg</h2>
+    <div class="fila"><div class="barra crece"><div style="width:${pct}%"></div></div><b>${pct}%</b></div>
+    <div class="stats">
+      ${stat("Faltan", m.alcanzada ? "0 kg" : `${kg(m.faltan)} kg`)}
+      ${stat("Llegás en", llegada, llegadaExtra)}
+    </div>
+    ${objetivo}
   </div>`;
 }

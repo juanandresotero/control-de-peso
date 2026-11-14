@@ -120,20 +120,30 @@ test("resumenEtapa: metas", () => {
     { id: "b", nombre: "B", peso: 96, fecha: null },
     { id: "c", nombre: "C", peso: 92, fecha: "2026-02-01" },
     { id: "d", nombre: "D", peso: 92, fecha: "2026-03-11" },
+    { id: "e", nombre: "E", peso: 95, fecha: "2026-03-11" },
   ]);
-  const [a, b, c, d] = resumenEtapa(datos, etapa, "2026-02-11").metas;
+  const [a, b, c, d, e] = resumenEtapa(datos, etapa, "2026-02-11").metas;
   assert.equal(a.faltan, 5.6);
   assert.ok(Math.abs(a.avance - 0.44) < 1e-9);
   assert.equal(a.alcanzada, false);
-  assert.equal(a.fechaEstimada, "2026-03-28");
+  // La estimación usa el ritmo del último mes (0,6 kg/sem): 5,6 / 0,6 = 9,3 semanas ≈ 2,1 meses.
+  assert.equal(a.semanasParaLlegar, 9.3);
+  assert.equal(a.mesesParaLlegar, 2.1);
+  assert.equal(a.fechaEstimada, "2026-04-17");
+  assert.equal(a.estado, null); // sin fecha objetivo no hay "bien / atrasado"
   assert.equal(b.alcanzada, true);
   assert.equal(b.avance, 1);
   assert.equal(b.fechaEstimada, null);
+  assert.equal(b.estado, "logrado");
   assert.equal(c.vencida, true);
   assert.equal(c.kgPorSemana, null);
+  assert.equal(c.estado, "vencido");
   assert.equal(d.vencida, false);
   assert.equal(d.semanasRestantes, 4);
   assert.equal(d.kgPorSemana, 0.9);
+  assert.equal(d.estado, "atrasado"); // necesita 0,9 kg/sem y viene bajando 0,6
+  assert.equal(e.kgPorSemana, 0.15);
+  assert.equal(e.estado, "bien");
 });
 
 test("resumenEtapa: si subiste, no hay fecha estimada", () => {
@@ -142,6 +152,18 @@ test("resumenEtapa: si subiste, no hay fecha estimada", () => {
   const r = resumenEtapa(datos, etapa, "2026-01-21");
   assert.ok(r.promedioSemanal < 0);
   assert.equal(r.metas[0].fechaEstimada, null);
+  assert.equal(r.metas[0].semanasParaLlegar, null);
+});
+
+test("resumenEtapa: si el último mes subiste, no hay estimación aunque el promedio total sea bueno", () => {
+  const etapa = { id: "e", nombre: "x", inicio: "2026-01-05", fin: null, pesoInicial: 100, metas: [{ id: "a", nombre: "A", peso: 80, fecha: null }] };
+  const dias = {};
+  ["2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08"].forEach((f, i) => { dias[f] = dia([90, 89, 89.5, 90, 91][i]); });
+  const r = resumenEtapa({ etapas: [etapa], marcasSemana: {}, dias }, etapa, "2026-02-09");
+  assert.ok(r.promedioSemanal > 0);
+  assert.ok(r.ritmo4 < 0);
+  assert.equal(r.metas[0].fechaEstimada, null);
+  assert.equal(r.metas[0].semanasParaLlegar, null);
 });
 
 test("resumenEtapa ignora estimados para el peso actual", () => {
