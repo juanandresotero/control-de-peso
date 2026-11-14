@@ -1,18 +1,31 @@
-// Pantalla Gráficas: peso semana a semana y día a día (Chart.js, cargado en index.html como window.Chart).
+// Pantalla Gráficas (Chart.js, cargado en index.html como window.Chart):
+//   1 y 2) La dieta actual, desde su inicio hasta hoy: semana a semana y día a día (se actualizan solas).
+//   3)     Por fechas: el rango que elijas; por defecto, desde el primer registro hasta hoy.
 // Solo se dibujan pesos reales; donde faltan días o eran relleno, la línea se une punteada.
-import { listaSemanas, rangoEtapa, serieDiaria, numeroSemana, etapaDe } from "./calculos.js";
-import { formatoCorto, lunesDe, sumarDias } from "./fechas.js";
-import { kg, etapaPorDefecto, opcionesEtapa, sinEtapas } from "./ui.js";
+import { listaSemanas, rangoEtapa, serieDiaria, numeroSemana } from "./calculos.js";
+import { formatoCorto, formatoLargo, lunesDe, diasEntre } from "./fechas.js";
+import { esc, kg, etapaPorDefecto, sinEtapas } from "./ui.js";
 
 const COLOR_LINEA = "#2e7d32";
 const COLORES_META = ["#f57c00", "#6a1b9a", "#0277bd", "#c62828"];
 const COLOR_DIA = { plato: "#e53935", tentacion: "#ff8a80", justificado: "#ffb74d" };
-let raiz, elegida = null, graficas = [];
+
+let raiz;
+let graficasDieta = [], graficaRango = null;
+let rangoElegido = { desde: null, hasta: null }; // null = por defecto (primer registro / hoy)
 
 export function iniciar(ctx, elemento) {
   raiz = elemento;
   raiz.addEventListener("change", (e) => {
-    if (e.target.id === "g-etapa") { elegida = e.target.value; pintar(ctx); }
+    if (e.target.id === "g-desde") rangoElegido.desde = e.target.value || null;
+    else if (e.target.id === "g-hasta") rangoElegido.hasta = e.target.value || null;
+    else return;
+    pintarRango(ctx);
+  });
+  raiz.addEventListener("click", (e) => {
+    if (!e.target.closest("[data-accion=rango-todo]")) return;
+    rangoElegido = { desde: null, hasta: null };
+    pintarRango(ctx);
   });
 }
 
@@ -36,7 +49,7 @@ function capasDeMetas(metas, cantidad, indiceDeFecha) {
   metas.forEach((meta, i) => {
     const color = COLORES_META[i % COLORES_META.length];
     capas.push({
-      label: `Meta ${meta.nombre}`, data: Array(cantidad).fill(meta.peso), borderColor: color,
+      label: `Meta ${meta.nombre}`, data: Array(cantidad).fill(meta.peso), borderColor: color, backgroundColor: color,
       borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0, fill: false,
     });
     const indice = meta.fecha ? indiceDeFecha(meta.fecha) : -1;
@@ -52,78 +65,109 @@ function capasDeMetas(metas, cantidad, indiceDeFecha) {
   return capas;
 }
 
-export function pintar(ctx) {
-  const datos = ctx.datos();
-  const hoy = ctx.hoy();
-  graficas.forEach((g) => g.destroy());
-  graficas = [];
-  if (!Object.keys(datos.dias).length) { raiz.innerHTML = sinEtapas(); return; }
-  if (elegida !== "todo" && !datos.etapas.some((e) => e.id === elegida)) {
-    elegida = etapaPorDefecto(datos, hoy)?.id || "todo";
-  }
-
-  let desde, hasta, pesoBase = null, etapa = null;
-  if (elegida === "todo") {
-    desde = Object.keys(datos.dias).sort()[0];
-    hasta = hoy;
-  } else {
-    etapa = datos.etapas.find((e) => e.id === elegida);
-    ({ desde, hasta } = rangoEtapa(etapa, datos.etapas, hoy));
-    if (hasta > hoy) hasta = hoy;
-    pesoBase = etapa.pesoInicial;
-  }
-  const metas = (etapa || datos.etapas.at(-1))?.metas || [];
-
-  raiz.innerHTML = `
-    <div class="tarjeta"><select id="g-etapa">${opcionesEtapa(datos, elegida, true)}</select></div>
-    <div class="tarjeta"><h2>Semana a semana</h2><div class="grafica"><canvas id="g-semanal"></canvas></div></div>
-    <div class="tarjeta"><h2>Día a día</h2><div class="grafica"><canvas id="g-diaria"></canvas></div>
-      <p class="sutil" style="margin:8px 0 0">Puntos rojos: plato malo · rosados: tentación · naranjas: no fue falta de voluntad. La línea punteada une días sin pesarte.</p></div>`;
-
-  if (typeof window.Chart !== "function") {
-    raiz.insertAdjacentHTML("beforeend", `<div class="alerta">No se pudo cargar el motor de gráficas.</div>`);
-    return;
-  }
-
-  // Semana a semana
-  const semanas = listaSemanas(datos, desde, hasta, pesoBase, hoy);
-  const etiquetasSem = semanas.map((s) => {
-    const e = etapa || etapaDe(sumarDias(s.lunes, 6), datos.etapas);
-    return etapa ? `Sem ${numeroSemana(s.lunes, e)}` : formatoCorto(s.lunes) + "/" + s.lunes.slice(2, 4);
-  });
+function graficaSemanal(canvas, datos, etapa, desde, hasta, hoy) {
+  const semanas = listaSemanas(datos, desde, hasta, etapa.pesoInicial, hoy);
   const indiceSemana = (fecha) => semanas.findIndex((s) => s.lunes === lunesDe(fecha));
-  graficas.push(new window.Chart(raiz.querySelector("#g-semanal"), {
+  return new window.Chart(canvas, {
     type: "line",
     data: {
-      labels: etiquetasSem,
+      labels: semanas.map((s) => `Sem ${numeroSemana(s.lunes, etapa)}`),
       datasets: [
         {
           label: "Peso de la semana", data: semanas.map((s) => (s.estimada ? null : s.peso)),
           borderColor: COLOR_LINEA, backgroundColor: COLOR_LINEA, pointRadius: 3, tension: 0.2, segment: punteadoEnHuecos,
         },
-        ...capasDeMetas(metas, semanas.length, indiceSemana),
+        ...capasDeMetas(etapa.metas || [], semanas.length, indiceSemana),
       ],
     },
     options: opcionesBase(),
-  }));
+  });
+}
 
-  // Día a día
+function graficaDiaria(canvas, datos, desde, hasta, metas) {
   const serie = serieDiaria(datos, desde, hasta);
-  const indiceDia = (fecha) => serie.fechas.indexOf(fecha);
+  const conAnio = diasEntre(desde, hasta) > 300;
   const colorPunto = serie.fechas.map((f) => COLOR_DIA[datos.dias[f]?.comida] || COLOR_LINEA);
-  graficas.push(new window.Chart(raiz.querySelector("#g-diaria"), {
+  return new window.Chart(canvas, {
     type: "line",
     data: {
-      labels: serie.fechas.map((f) => (elegida === "todo" ? `${formatoCorto(f)}/${f.slice(2, 4)}` : formatoCorto(f))),
+      labels: serie.fechas.map((f) => (conAnio ? `${formatoCorto(f)}/${f.slice(2, 4)}` : formatoCorto(f))),
       datasets: [
         {
           label: "Peso del día", data: serie.valores, borderColor: COLOR_LINEA, borderWidth: 1.5,
           pointRadius: serie.fechas.length > 200 ? 1.5 : 2.5, pointBackgroundColor: colorPunto, pointBorderColor: colorPunto,
           segment: punteadoEnHuecos,
         },
-        ...capasDeMetas(metas, serie.fechas.length, indiceDia),
+        ...capasDeMetas(metas, serie.fechas.length, (fecha) => serie.fechas.indexOf(fecha)),
       ],
     },
     options: opcionesBase(),
-  }));
+  });
+}
+
+const ayudaColores = `<p class="sutil" style="margin:8px 0 0">Puntos rojos: plato malo · rosados: tentación · naranjas: no fue falta de voluntad.
+  La línea punteada une días sin pesarte.</p>`;
+
+export function pintar(ctx) {
+  const datos = ctx.datos();
+  const hoy = ctx.hoy();
+  graficasDieta.forEach((g) => g.destroy());
+  graficasDieta = [];
+  if (!Object.keys(datos.dias).length) { raiz.innerHTML = sinEtapas(); return; }
+  const etapa = etapaPorDefecto(datos, hoy);
+
+  raiz.innerHTML = `
+    ${etapa ? `
+    <div class="tarjeta">
+      <h2>${esc(etapa.nombre)} · semana a semana</h2>
+      <p class="sutil" style="margin-top:0">Desde el ${formatoLargo(etapa.inicio)} hasta hoy</p>
+      <div class="grafica"><canvas id="g-semanal"></canvas></div>
+    </div>
+    <div class="tarjeta">
+      <h2>${esc(etapa.nombre)} · día a día</h2>
+      <div class="grafica"><canvas id="g-diaria"></canvas></div>
+      ${ayudaColores}
+    </div>` : sinEtapas()}
+    <div class="tarjeta">
+      <h2>Por fechas</h2>
+      <div class="rango">
+        <div><label class="sutil" for="g-desde">Desde</label><input type="date" id="g-desde"></div>
+        <div><label class="sutil" for="g-hasta">Hasta</label><input type="date" id="g-hasta"></div>
+        <button class="boton" data-accion="rango-todo">Todo</button>
+      </div>
+      <div class="mensaje error" id="g-rango-msg"></div>
+      <div class="grafica"><canvas id="g-rango"></canvas></div>
+      ${ayudaColores}
+    </div>`;
+
+  if (typeof window.Chart !== "function") {
+    raiz.insertAdjacentHTML("afterbegin", `<div class="alerta">No se pudo cargar el motor de gráficas.</div>`);
+    return;
+  }
+  if (etapa) {
+    const { desde, hasta } = rangoEtapa(etapa, datos.etapas, hoy);
+    const fin = hasta < hoy ? hasta : hoy;
+    graficasDieta.push(graficaSemanal(raiz.querySelector("#g-semanal"), datos, etapa, desde, fin, hoy));
+    graficasDieta.push(graficaDiaria(raiz.querySelector("#g-diaria"), datos, desde, fin, etapa.metas || []));
+  }
+  pintarRango(ctx);
+}
+
+function pintarRango(ctx) {
+  const datos = ctx.datos();
+  const hoy = ctx.hoy();
+  if (graficaRango) { graficaRango.destroy(); graficaRango = null; }
+  const canvas = raiz.querySelector("#g-rango");
+  if (!canvas || typeof window.Chart !== "function") return;
+
+  const primera = Object.keys(datos.dias).sort()[0] || hoy;
+  const desde = rangoElegido.desde || primera;
+  const hasta = rangoElegido.hasta || hoy;
+  raiz.querySelector("#g-desde").value = desde;
+  raiz.querySelector("#g-hasta").value = hasta;
+  const mensaje = raiz.querySelector("#g-rango-msg");
+  if (desde > hasta) { mensaje.textContent = "La fecha \"desde\" es posterior a \"hasta\"."; return; }
+  mensaje.textContent = "";
+  const metas = etapaPorDefecto(datos, hoy)?.metas || [];
+  graficaRango = graficaDiaria(canvas, datos, desde, hasta, metas);
 }

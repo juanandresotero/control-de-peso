@@ -111,9 +111,11 @@ reciente; `marcasSemana` no se edita desde la app (solo importación). Los borra
    - número gris en cursiva = estimado.
    Filtro: etapa actual / otra etapa / todo. Tocar un día abre Cargar en esa fecha.
 3. **Resumen**: los datos de la sección "Resumen de la etapa", con la barra de progreso por meta.
-4. **Gráficas**: "Semana a semana" (peso de cada semana) y "Día a día" (peso diario). Filtro de etapa / todo.
+4. **Gráficas** (cambio pedido por el usuario el 2026-11-13):
+   - Dieta actual (etapa de hoy), desde su inicio hasta hoy, se actualiza sola: "semana a semana" y "día a día".
+   - "Por fechas": rango con Desde / Hasta (por defecto: primer registro → hoy) y botón "Todo" para volver al defecto.
    Solo se dibujan pesos reales; donde faltan días (o son estimados) la línea se une **punteada**.
-   Líneas horizontales en cada meta; el día objetivo marcado.
+   Líneas horizontales en cada meta de la dieta actual; el día objetivo marcado.
 5. **Ajustes**: etapas (crear / editar nombre, inicio, fin, peso inicial / borrar), metas por etapa
    (nombre, peso, día objetivo opcional), vinculación (crear código, vincular con código, ver código,
    copiar link, sincronizar ahora, desvincular), respaldo (descargar JSON, descargar CSV,

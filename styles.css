@@ -134,13 +134,21 @@ select { width: 100%; }
 
 /* --- Gráficas --- */
 .grafica { position: relative; height: 300px; }
+.rango { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: end; margin-bottom: 8px; }
+.rango > div { display: flex; flex-direction: column; min-width: 0; }
 
 /* --- Ajustes --- */
 .etapa-form { border: 1px solid var(--borde); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
 .etapa-form label { display: block; font-size: .85rem; color: var(--gris); margin-top: 6px; }
-.etapa-form .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.etapa-form .campos > div { display: flex; flex-direction: column; }
-.meta-fila { display: grid; grid-template-columns: 2fr 1fr 1.4fr auto; gap: 6px; margin-top: 6px; }
+.etapa-form .campos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.etapa-form .campos > div { display: flex; flex-direction: column; min-width: 0; }
+.etapa-form input, .rango input { width: 100%; min-width: 0; }
+/* Meta: en el celu el nombre va arriba y peso · fecha · ✕ abajo; en pantallas anchas, todo en una fila. */
+.meta-fila {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto; gap: 6px;
+  margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--borde);
+}
+.meta-fila [data-m="nombre"] { grid-column: 1 / -1; }
 .codigo { font-family: ui-monospace, Consolas, monospace; font-size: 1.15rem; letter-spacing: 1px; text-align: center;
   background: var(--fondo); padding: 10px; border-radius: 8px; word-break: break-all; }
 .botones { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
@@ -165,6 +173,8 @@ select { width: 100%; }
 }
 
 @media (min-width: 700px) {
+  .meta-fila { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.4fr) auto; border-top: 0; padding-top: 0; }
+  .meta-fila [data-m="nombre"] { grid-column: auto; }
   .opciones { grid-template-columns: repeat(4, 1fr); }
   .datos-grid { grid-template-columns: repeat(4, 1fr); }
   .grafica { height: 380px; }
