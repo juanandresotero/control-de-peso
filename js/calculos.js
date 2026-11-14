@@ -76,28 +76,28 @@ export function etiquetaBase(base) {
 // Días que abarca cada base: última semana = 7, último mes = 30, últimas N semanas = N × 7.
 const diasDeBase = (base) => (base.semanas === 4 ? 30 : base.semanas * 7);
 
-// Kilos por semana que venís bajando (negativo = subiendo). Cuenta TODOS los días pesados del período, hasta hoy
-// (incluida la semana en curso): es la pendiente de la línea que mejor pasa por esos pesos (mínimos cuadrados),
-// así un día con agua de más no arruina la cuenta. El período se corta en el inicio de la dieta.
-// null si hay menos de 2 pesadas.
+// Cuánto venís bajando por semana (negativo = subiendo), con la cuenta simple que haría cualquiera:
+// primer peso del período − último peso, dividido por las semanas del período.
+//   · últimos 7 días / 30 días / N semanas: el período termina hoy (incluye la semana en curso).
+//   · desde el inicio: peso inicial de la dieta − último peso, ÷ semanas desde que arrancó.
+// Devuelve { ritmo, desde: { fecha, peso }, hasta: { fecha, peso } } (las dos pesadas que compara) o null.
 export function calcularRitmo(datos, etapa, base, hoy) {
-  const { hasta } = rangoEtapa(etapa, datos.etapas || [etapa], hoy);
-  const fin = hasta < hoy ? hasta : hoy;
-  let desde = base.modo === "inicio" ? etapa.inicio : sumarDias(fin, -(diasDeBase(base) - 1));
+  const { hasta: finEtapa } = rangoEtapa(etapa, datos.etapas || [etapa], hoy);
+  const fin = finEtapa < hoy ? finEtapa : hoy;
+  const dias = base.modo === "inicio" ? null : diasDeBase(base);
+  let desde = dias ? sumarDias(fin, -(dias - 1)) : etapa.inicio;
   if (desde < etapa.inicio) desde = etapa.inicio;
 
-  const puntos = Object.entries(datos.dias)
+  const pesadas = Object.entries(datos.dias)
     .filter(([fecha, dia]) => fecha >= desde && fecha <= fin && esReal(dia))
-    .map(([fecha, dia]) => [diasEntre(desde, fecha), dia.peso]);
-  if (base.modo === "inicio" && !puntos.some(([x]) => x === 0)) puntos.push([0, etapa.pesoInicial]);
-  if (puntos.length < 2) return null;
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([fecha, dia]) => ({ fecha, peso: dia.peso }));
+  const ultima = pesadas.at(-1);
+  const primera = base.modo === "inicio" ? { fecha: etapa.inicio, peso: etapa.pesoInicial } : pesadas[0];
+  if (!ultima || !primera || primera.fecha >= ultima.fecha) return null;
 
-  const mediaX = puntos.reduce((s, [x]) => s + x, 0) / puntos.length;
-  const mediaY = puntos.reduce((s, [, y]) => s + y, 0) / puntos.length;
-  let sxy = 0, sxx = 0;
-  for (const [x, y] of puntos) { sxy += (x - mediaX) * (y - mediaY); sxx += (x - mediaX) ** 2; }
-  if (!sxx) return null;
-  return -(sxy / sxx) * 7; // kg por día → kg por semana (positivo = bajando)
+  const semanas = dias ? dias / 7 : diasEntre(primera.fecha, ultima.fecha) / 7;
+  return { ritmo: (primera.peso - ultima.peso) / semanas, desde: primera, hasta: ultima };
 }
 
 const DIAS_POR_MES = 30.4375;
@@ -150,7 +150,8 @@ export function resumenEtapa(datos, etapa, hoy, base = BASE_RITMO_INICIAL) {
   let racha = 0;
   for (let i = cerradas.length - 1; i >= 0 && cerradas[i].marca === "✓"; i--) racha++;
 
-  const ritmo = calcularRitmo(datos, etapa, base, hoy);
+  const detalleRitmo = calcularRitmo(datos, etapa, base, hoy);
+  const ritmo = detalleRitmo ? detalleRitmo.ritmo : null;
   const contexto = { pesoInicial, pesoActual, fechaActual, ritmo, hoy };
   return {
     pesoInicial, pesoActual, fechaActual, mejorPeso,
@@ -159,6 +160,7 @@ export function resumenEtapa(datos, etapa, hoy, base = BASE_RITMO_INICIAL) {
     semanaNumero: numeroSemana(ultimoDia, etapa),
     promedioSemanal,
     ritmo,
+    detalleRitmo,
     semanasOk: cerradas.filter((s) => s.marca === "✓").length,
     semanasMal: cerradas.filter((s) => s.marca === "✗").length,
     racha,

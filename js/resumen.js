@@ -34,7 +34,7 @@ function dialogoBase() {
     <label><input type="radio" name="r-base" value="inicio"> Desde que arrancó la dieta</label>
     <label><input type="radio" name="r-base" value="otra" id="r-otra"> Últimas
       <input type="number" id="r-n" min="1" max="104" step="1" inputmode="numeric"> semanas</label>
-    <p class="sutil">Cuenta todos los días que te pesaste, hasta hoy.</p>
+    <p class="sutil">Primer peso del período − último peso, por semana.</p>
     <div class="mensaje error" id="r-msg"></div>
     <div class="fila" style="justify-content:flex-end">
       <button class="boton" type="button" id="r-cancelar">Cancelar</button>
@@ -91,7 +91,7 @@ export function pintar(ctx) {
       <div class="stats">
         ${stat("Peso actual", `${kg(r.pesoActual)} kg`, formatoCorto(r.fechaActual), "destacado")}
         ${stat(bajo ? "Bajaste" : "Subiste", `${kg(Math.abs(r.kilosPerdidos))} kg`, `${kg(Math.abs(r.porcentaje) * 100)}% · semana ${r.semanaNumero}`)}
-        ${statBoton(`Ritmo · ${etiqueta} ✎`, ritmo(r.ritmo), "por semana")}
+        ${statBoton(`Ritmo · ${etiqueta} ✎`, ritmo(r.ritmo), comparacion(r.detalleRitmo))}
       </div>
     </div>
     ${r.metas.length ? r.metas.map((m) => tarjetaMeta(m, etiqueta, r.ritmo)).join("")
@@ -163,6 +163,12 @@ function tarjetaMedidas(datos) {
         <td>${dif(z.diferencia)}</td></tr>`).join("")}</tbody>
     </table>
   </div>`;
+}
+
+// Las dos pesadas que compara el ritmo, para poder verificarlo: "95,9 → 95,1" y "08/11 → 14/11".
+function comparacion(d) {
+  if (!d) return "por semana";
+  return `por semana<br>${kg(d.desde.peso)} → ${kg(d.hasta.peso)}<br>${formatoCorto(d.desde.fecha)} → ${formatoCorto(d.hasta.fecha)}`;
 }
 
 // "−0,45 kg" si bajó, "+0,02 kg" si subió

@@ -188,45 +188,43 @@ function datosDiarios(inicio, cantidad, f, extra = {}) {
 }
 const cerca = (a, b) => assert.ok(a != null && Math.abs(a - b) < 1e-6, `${a} ≠ ${b}`);
 
-test("calcularRitmo: cuenta todos los días del período (línea que mejor pasa por los pesos)", () => {
+test("calcularRitmo: cuenta simple con tus datos reales (últimos 7 días = 95,9 → 95,1 = 0,8)", () => {
+  const etapa = { id: "e", inicio: "2026-03-02", fin: null, pesoInicial: 108.5 };
+  const p = { "2026-11-07": 95.5, "2026-11-08": 95.9, "2026-11-09": 96.6, "2026-11-10": 95.5, "2026-11-11": 95.0,
+    "2026-11-12": 95.2, "2026-11-13": 95.5, "2026-11-14": 95.1 };
+  const datos = { etapas: [etapa], dias: Object.fromEntries(Object.entries(p).map(([f, v]) => [f, dia(v)])) };
+  const r = calcularRitmo(datos, etapa, { modo: "semanas", semanas: 1 }, "2026-11-14");
+  cerca(r.ritmo, 0.8);
+  assert.deepEqual(r.desde, { fecha: "2026-11-08", peso: 95.9 });
+  assert.deepEqual(r.hasta, { fecha: "2026-11-14", peso: 95.1 });
+});
+
+test("calcularRitmo: últimos 30 días y N semanas = lo que bajaste en el período ÷ semanas del período", () => {
   const etapa = { id: "e", inicio: "2026-01-01", pesoInicial: 100 };
-  const datos = datosDiarios("2026-01-01", 50, (i) => 100 - 0.1 * i); // baja 0,1 por día = 0,7 por semana
+  const datos = datosDiarios("2026-01-01", 50, (i) => 100 - 0.1 * i); // día 49 = 95,1
   const hoy = sumarDias("2026-01-01", 49);
-  for (const base of [{ modo: "semanas", semanas: 1 }, { modo: "semanas", semanas: 4 }, { modo: "semanas", semanas: 6 }, { modo: "inicio" }]) {
-    cerca(calcularRitmo(datos, etapa, base, hoy), 0.7);
-  }
+  const mes = calcularRitmo(datos, etapa, { modo: "semanas", semanas: 4 }, hoy);
+  assert.deepEqual(mes.desde, { fecha: sumarDias("2026-01-01", 20), peso: 98 });  // 30 días: del día 20 al 49
+  cerca(mes.ritmo, 2.9 / (30 / 7));
+  cerca(calcularRitmo(datos, etapa, { modo: "semanas", semanas: 2 }, hoy).ritmo, 1.3 / 2); // 14 días: día 36 (96,4) → 95,1
 });
 
-test("calcularRitmo: los días de la semana en curso cuentan", () => {
-  const etapa = { id: "e", inicio: "2026-01-01", pesoInicial: 100 };
-  // 30 días quieto en 100 y después 6 días bajando 0,2 por día.
-  const datos = datosDiarios("2026-01-01", 36, (i) => (i <= 29 ? 100 : 100 - 0.2 * (i - 29)));
-  const hoy = sumarDias("2026-01-01", 35);
-  cerca(calcularRitmo(datos, etapa, { modo: "semanas", semanas: 1 }, hoy), 1.4); // últimos 7 días: 0,2 por día
-  const mes = { modo: "semanas", semanas: 4 };
-  cerca(calcularRitmo(datos, etapa, mes, sumarDias("2026-01-01", 29)), 0); // antes de esos 6 días: quieto
-  assert.ok(calcularRitmo(datos, etapa, mes, hoy) > 0);                    // con esos 6 días: ya lo nota
+test("calcularRitmo: desde el inicio = peso inicial − último peso, ÷ semanas desde que arrancó", () => {
+  const etapa = { id: "e", inicio: "2026-03-02", pesoInicial: 108.5 };
+  const datos = { dias: { "2026-11-13": dia(95.5) } };
+  const r = calcularRitmo(datos, etapa, { modo: "inicio" }, "2026-11-14");
+  cerca(r.ritmo, 13 / (256 / 7));
+  assert.deepEqual(r.desde, { fecha: "2026-03-02", peso: 108.5 });
+  assert.deepEqual(r.hasta, { fecha: "2026-11-13", peso: 95.5 });
 });
 
-test("calcularRitmo: último mes = 30 días; ignora relleno y días de otra dieta", () => {
+test("calcularRitmo: ignora relleno y días de otra dieta; los días de esta semana cuentan", () => {
   const etapa = { id: "e", inicio: "2026-03-01", pesoInicial: 100 };
-  const extra = {
-    "2026-02-20": dia(150),                                  // otra dieta: no cuenta
-    "2026-03-05": { ...dia(130), estimado: true },           // relleno: no cuenta
-  };
-  const datos = datosDiarios("2026-03-01", 40, (i) => 100 - 0.1 * i, extra);
-  const hoy = sumarDias("2026-03-01", 39);
-  cerca(calcularRitmo(datos, etapa, { modo: "semanas", semanas: 4 }, hoy), 0.7);
-  cerca(calcularRitmo(datos, etapa, { modo: "semanas", semanas: 10 }, hoy), 0.7); // se corta en el inicio de la dieta
-  cerca(calcularRitmo(datos, etapa, { modo: "inicio" }, hoy), 0.7);
-});
-
-test("calcularRitmo: desde el inicio cuenta hasta hoy, incluidos los días de esta semana", () => {
-  const etapa = { id: "e", inicio: "2026-01-01", pesoInicial: 100 };
-  // 4 semanas quieto en 100 y los últimos 3 días (semana en curso) bajando 0,5 por día.
-  const datos = datosDiarios("2026-01-01", 31, (i) => (i <= 27 ? 100 : 100 - 0.5 * (i - 27)));
-  const hoy = sumarDias("2026-01-01", 30);
-  assert.ok(calcularRitmo(datos, etapa, { modo: "inicio" }, hoy) > 0); // sin esos 3 días daría 0
+  const extra = { "2026-02-27": dia(150), "2026-03-05": { ...dia(130), estimado: true } };
+  const datos = datosDiarios("2026-03-01", 10, (i) => 100 - 0.1 * i, extra); // hasta el 10/03 = 99,1
+  const r = calcularRitmo(datos, etapa, { modo: "semanas", semanas: 4 }, "2026-03-10");
+  assert.deepEqual(r.desde, { fecha: "2026-03-01", peso: 100 }); // el período se corta en el inicio de la dieta
+  assert.deepEqual(r.hasta, { fecha: "2026-03-10", peso: 99.1 });
 });
 
 test("resumenEtapa: con ritmo de estancado (menos de 0,1 kg/sem) no estima semanas absurdas", () => {
@@ -240,9 +238,9 @@ test("resumenEtapa: con ritmo de estancado (menos de 0,1 kg/sem) no estima seman
 
 test("calcularRitmo: con menos de 2 pesadas en el período no hay ritmo", () => {
   const etapa = { id: "e", inicio: "2026-01-01", pesoInicial: 100 };
-  const datos = { marcasSemana: {}, dias: { "2026-01-01": dia(100), "2026-01-20": dia(98) } };
+  const datos = { dias: { "2026-01-01": dia(100), "2026-01-20": dia(98) } };
   assert.equal(calcularRitmo(datos, etapa, { modo: "semanas", semanas: 1 }, "2026-01-21"), null);
-  cerca(calcularRitmo(datos, etapa, { modo: "inicio" }, "2026-01-21"), 2 / (19 / 7));
+  cerca(calcularRitmo(datos, etapa, { modo: "inicio" }, "2026-01-21").ritmo, 2 / (19 / 7));
 });
 
 test("etiquetaBase", () => {
