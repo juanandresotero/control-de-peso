@@ -4,6 +4,7 @@ import {
   etapaDe, rangoEtapa, numeroSemana, resumenSemana, listaSemanas, resumenEtapa, serieDiaria, diasObjetivo,
   calcularRitmo, etiquetaBase,
 } from "../js/calculos.js";
+import { sumarDias } from "../js/fechas.js";
 
 const dia = (peso, comida = "bien", extra = {}) => ({ peso, comida, ejercicio: false, estimado: false, mod: 1, ...extra });
 const e2025 = { id: "e2025", nombre: "Dieta 2025", inicio: "2025-03-22", fin: null, pesoInicial: 104.8, metas: [] };
@@ -119,8 +120,7 @@ test("resumenEtapa: números principales", () => {
   assert.equal(r.kilosPerdidos, 4.4);
   assert.ok(Math.abs(r.porcentaje - 0.044) < 1e-9);
   assert.ok(Math.abs(r.promedioSemanal - 4.4 / (36 / 7)) < 1e-9);
-  // Ritmo por defecto: último mes, con promedios de semanas terminadas (sem 1: 99,3 → sem 5: 96,0).
-  assert.ok(Math.abs(r.ritmo - (99.3 - 96) / 4) < 1e-9);
+  assert.ok(r.ritmo > 0); // por defecto: últimos 30 días (el valor exacto se prueba en calcularRitmo)
   assert.equal(r.semanaNumero, 6);
   assert.equal(r.semanasOk, 4);
   assert.equal(r.semanasMal, 1);
@@ -140,10 +140,10 @@ test("resumenEtapa: metas", () => {
   assert.equal(a.faltan, 5.6);
   assert.ok(Math.abs(a.avance - 0.44) < 1e-9);
   assert.equal(a.alcanzada, false);
-  // Ritmo del último mes = 0,825 kg/sem: 5,6 / 0,825 = 6,8 semanas ≈ 1,6 meses.
-  assert.equal(a.semanasParaLlegar, 6.8);
-  assert.equal(a.mesesParaLlegar, 1.6);
-  assert.equal(a.fechaEstimada, "2026-03-30");
+  // Llegás en = kilos que faltan / ritmo.
+  const { ritmo } = resumenEtapa(datos, etapa, "2026-02-11");
+  assert.equal(a.semanasParaLlegar, Math.round((5.6 / ritmo) * 10) / 10);
+  assert.equal(a.fechaEstimada, sumarDias("2026-02-10", Math.ceil((5.6 / ritmo) * 7)));
   assert.equal(a.estado, null); // sin fecha objetivo no hay "bien / atrasado"
   assert.equal(b.alcanzada, true);
   assert.equal(b.avance, 1);
@@ -155,7 +155,7 @@ test("resumenEtapa: metas", () => {
   assert.equal(d.vencida, false);
   assert.equal(d.semanasRestantes, 4);
   assert.equal(d.kgPorSemana, 0.9);
-  assert.equal(d.estado, "atrasado"); // necesita 0,9 kg/sem y viene bajando 0,83
+  assert.equal(d.estado, ritmo >= 0.9 ? "bien" : "atrasado");
   assert.equal(e.kgPorSemana, 0.15);
   assert.equal(e.estado, "bien");
 });
@@ -180,31 +180,74 @@ test("resumenEtapa: si el último mes subiste, no hay estimación aunque el prom
   assert.equal(r.metas[0].semanasParaLlegar, null);
 });
 
-test("calcularRitmo: según la base elegida, con promedios de semanas terminadas", () => {
-  const { datos, etapa } = datosEjemplo([]);
-  const hoy = "2026-02-11";
-  const semanas = listaSemanas(datos, etapa.inicio, hoy, etapa.pesoInicial, hoy);
-  const ritmo = (base) => calcularRitmo(semanas, etapa, base, hoy);
-  const cerca = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} ≠ ${b}`);
-  cerca(ritmo({ modo: "semanas", semanas: 1 }), 0.5);           // sem 4: 96,5 → sem 5: 96,0
-  cerca(ritmo({ modo: "semanas", semanas: 2 }), 0.5);           // sem 3: 97,0 → 96,0 en 2 semanas
-  cerca(ritmo({ modo: "semanas", semanas: 4 }), 3.3 / 4);       // sem 1: 99,3 → 96,0 en 4 semanas
-  cerca(ritmo({ modo: "inicio" }), 4 / (31 / 7));                // 100 → 96,0 en 4,4 semanas
-  assert.equal(ritmo({ modo: "semanas", semanas: 10 }), null);          // no hay tanta historia
+// Pesos diarios desde `inicio`: f(i) da el peso del día i.
+function datosDiarios(inicio, cantidad, f, extra = {}) {
+  const dias = {};
+  for (let i = 0; i < cantidad; i++) dias[sumarDias(inicio, i)] = dia(Math.round(f(i) * 10) / 10);
+  return { marcasSemana: {}, dias: { ...dias, ...extra } };
+}
+const cerca = (a, b) => assert.ok(a != null && Math.abs(a - b) < 1e-6, `${a} ≠ ${b}`);
+
+test("calcularRitmo: cuenta todos los días del período (línea que mejor pasa por los pesos)", () => {
+  const etapa = { id: "e", inicio: "2026-01-01", pesoInicial: 100 };
+  const datos = datosDiarios("2026-01-01", 50, (i) => 100 - 0.1 * i); // baja 0,1 por día = 0,7 por semana
+  const hoy = sumarDias("2026-01-01", 49);
+  for (const base of [{ modo: "semanas", semanas: 1 }, { modo: "semanas", semanas: 4 }, { modo: "semanas", semanas: 6 }, { modo: "inicio" }]) {
+    cerca(calcularRitmo(datos, etapa, base, hoy), 0.7);
+  }
 });
 
-test("calcularRitmo: si la semana de referencia no tiene pesos, usa la anterior más cercana", () => {
-  const { datos, etapa } = datosEjemplo([]);
-  delete datos.dias["2026-01-25"]; // la semana 3 queda vacía
-  const hoy = "2026-02-11";
-  const semanas = listaSemanas(datos, etapa.inicio, hoy, etapa.pesoInicial, hoy);
-  const r = calcularRitmo(semanas, etapa, { modo: "semanas", semanas: 2 }, hoy);
-  assert.ok(Math.abs(r - 2.3 / 3) < 1e-9); // sem 2: 98,3 → 96,0 en 3 semanas
+test("calcularRitmo: los días de la semana en curso cuentan", () => {
+  const etapa = { id: "e", inicio: "2026-01-01", pesoInicial: 100 };
+  // 30 días quieto en 100 y después 6 días bajando 0,2 por día.
+  const datos = datosDiarios("2026-01-01", 36, (i) => (i <= 29 ? 100 : 100 - 0.2 * (i - 29)));
+  const hoy = sumarDias("2026-01-01", 35);
+  cerca(calcularRitmo(datos, etapa, { modo: "semanas", semanas: 1 }, hoy), 1.4); // últimos 7 días: 0,2 por día
+  const mes = { modo: "semanas", semanas: 4 };
+  cerca(calcularRitmo(datos, etapa, mes, sumarDias("2026-01-01", 29)), 0); // antes de esos 6 días: quieto
+  assert.ok(calcularRitmo(datos, etapa, mes, hoy) > 0);                    // con esos 6 días: ya lo nota
+});
+
+test("calcularRitmo: último mes = 30 días; ignora relleno y días de otra dieta", () => {
+  const etapa = { id: "e", inicio: "2026-03-01", pesoInicial: 100 };
+  const extra = {
+    "2026-02-20": dia(150),                                  // otra dieta: no cuenta
+    "2026-03-05": { ...dia(130), estimado: true },           // relleno: no cuenta
+  };
+  const datos = datosDiarios("2026-03-01", 40, (i) => 100 - 0.1 * i, extra);
+  const hoy = sumarDias("2026-03-01", 39);
+  cerca(calcularRitmo(datos, etapa, { modo: "semanas", semanas: 4 }, hoy), 0.7);
+  cerca(calcularRitmo(datos, etapa, { modo: "semanas", semanas: 10 }, hoy), 0.7); // se corta en el inicio de la dieta
+  cerca(calcularRitmo(datos, etapa, { modo: "inicio" }, hoy), 0.7);
+});
+
+test("calcularRitmo: desde el inicio cuenta hasta hoy, incluidos los días de esta semana", () => {
+  const etapa = { id: "e", inicio: "2026-01-01", pesoInicial: 100 };
+  // 4 semanas quieto en 100 y los últimos 3 días (semana en curso) bajando 0,5 por día.
+  const datos = datosDiarios("2026-01-01", 31, (i) => (i <= 27 ? 100 : 100 - 0.5 * (i - 27)));
+  const hoy = sumarDias("2026-01-01", 30);
+  assert.ok(calcularRitmo(datos, etapa, { modo: "inicio" }, hoy) > 0); // sin esos 3 días daría 0
+});
+
+test("resumenEtapa: con ritmo de estancado (menos de 0,1 kg/sem) no estima semanas absurdas", () => {
+  const etapa = { id: "e", nombre: "x", inicio: "2026-01-01", fin: null, pesoInicial: 100, metas: [{ id: "a", nombre: "A", peso: 80, fecha: null }] };
+  const datos = { etapas: [etapa], ...datosDiarios("2026-01-01", 30, (i) => (i % 2 ? 99.1 : 99)) }; // quieto en ~99
+  const r = resumenEtapa(datos, etapa, sumarDias("2026-01-01", 29));
+  assert.ok(Math.abs(r.ritmo) < 0.1);
+  assert.equal(r.metas[0].semanasParaLlegar, null);
+  assert.equal(r.metas[0].estancado, true);
+});
+
+test("calcularRitmo: con menos de 2 pesadas en el período no hay ritmo", () => {
+  const etapa = { id: "e", inicio: "2026-01-01", pesoInicial: 100 };
+  const datos = { marcasSemana: {}, dias: { "2026-01-01": dia(100), "2026-01-20": dia(98) } };
+  assert.equal(calcularRitmo(datos, etapa, { modo: "semanas", semanas: 1 }, "2026-01-21"), null);
+  cerca(calcularRitmo(datos, etapa, { modo: "inicio" }, "2026-01-21"), 2 / (19 / 7));
 });
 
 test("etiquetaBase", () => {
-  assert.equal(etiquetaBase({ modo: "semanas", semanas: 1 }), "última semana");
-  assert.equal(etiquetaBase({ modo: "semanas", semanas: 4 }), "último mes");
+  assert.equal(etiquetaBase({ modo: "semanas", semanas: 1 }), "últimos 7 días");
+  assert.equal(etiquetaBase({ modo: "semanas", semanas: 4 }), "últimos 30 días");
   assert.equal(etiquetaBase({ modo: "semanas", semanas: 8 }), "últimas 8 semanas");
   assert.equal(etiquetaBase({ modo: "inicio" }), "desde el inicio");
 });

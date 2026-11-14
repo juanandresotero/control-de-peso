@@ -1,5 +1,5 @@
 // Pantalla Resumen: los números que importan de la dieta actual, con poco texto.
-import { resumenEtapa, rangoEtapa, etiquetaBase, BASE_RITMO_INICIAL } from "./calculos.js";
+import { resumenEtapa, rangoEtapa, etiquetaBase, BASE_RITMO_INICIAL, RITMO_MINIMO } from "./calculos.js";
 import { guardarPerfil } from "./datos.js";
 import { balanceComidas } from "./habitos.js";
 import { formatoCorto } from "./fechas.js";
@@ -29,12 +29,12 @@ const baseDe = (datos) => datos.perfil?.baseRitmo || BASE_RITMO_INICIAL;
 function dialogoBase() {
   return `<dialog id="r-base" class="dialogo-base" aria-label="Calcular el ritmo con">
     <h2>Calcular el ritmo con…</h2>
-    <label><input type="radio" name="r-base" value="1"> Última semana</label>
-    <label><input type="radio" name="r-base" value="4"> Último mes</label>
+    <label><input type="radio" name="r-base" value="1"> Últimos 7 días</label>
+    <label><input type="radio" name="r-base" value="4"> Últimos 30 días</label>
     <label><input type="radio" name="r-base" value="inicio"> Desde que arrancó la dieta</label>
     <label><input type="radio" name="r-base" value="otra" id="r-otra"> Últimas
       <input type="number" id="r-n" min="1" max="104" step="1" inputmode="numeric"> semanas</label>
-    <p class="sutil">Usa el promedio de cada semana terminada.</p>
+    <p class="sutil">Cuenta todos los días que te pesaste, hasta hoy.</p>
     <div class="mensaje error" id="r-msg"></div>
     <div class="fila" style="justify-content:flex-end">
       <button class="boton" type="button" id="r-cancelar">Cancelar</button>
@@ -94,7 +94,7 @@ export function pintar(ctx) {
         ${statBoton(`Ritmo · ${etiqueta} ✎`, ritmo(r.ritmo), "por semana")}
       </div>
     </div>
-    ${r.metas.length ? r.metas.map((m) => tarjetaMeta(m, etiqueta)).join("")
+    ${r.metas.length ? r.metas.map((m) => tarjetaMeta(m, etiqueta, r.ritmo)).join("")
       : `<div class="tarjeta sutil">Sin metas. <a href="#" data-ir-ajustes>Agregalas en Ajustes</a>.</div>`}
     <div class="tarjeta">
       <div class="stats">
@@ -169,7 +169,7 @@ function tarjetaMedidas(datos) {
 const ritmo = (n) => (n == null ? "—" : `${n > 0 ? "−" : n < 0 ? "+" : ""}${kg(Math.abs(n), 2)} kg`);
 
 function alertaRitmo(r, etiqueta) {
-  if (r.ritmo == null || r.ritmo > 0.1) return "";
+  if (r.ritmo == null || r.ritmo >= RITMO_MINIMO) return "";
   return `<div class="alerta ancho-completo">⚠️ ${r.ritmo < 0 ? "Subiendo" : "Estancado"} (${etiqueta})</div>`;
 }
 
@@ -186,14 +186,14 @@ const ESTADOS = {
   vencido: ["mal", "⛔ Fecha vencida"],
 };
 
-function tarjetaMeta(m, etiqueta) {
+function tarjetaMeta(m, etiqueta, ritmoActual) {
   const { meta } = m;
   const pct = Math.round(m.avance * 100);
   const llegada = m.alcanzada ? "¡Listo!"
     : m.semanasParaLlegar == null ? "—"
     : `${kg(m.semanasParaLlegar, m.semanasParaLlegar < 10 ? 1 : 0)} sem`;
   const llegadaExtra = m.alcanzada || m.semanasParaLlegar == null
-    ? (m.alcanzada ? "" : `${etiqueta}: sin bajar`)
+    ? (m.alcanzada ? "" : `${!m.estancado ? "sin datos" : ritmoActual < 0 ? "subiendo" : "estancado"} (${etiqueta})`)
     : `${kg(m.mesesParaLlegar)} meses · ${formatoCorto(m.fechaEstimada)}/${m.fechaEstimada.slice(2, 4)}`;
 
   let objetivo;

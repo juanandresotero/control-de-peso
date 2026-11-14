@@ -1,6 +1,6 @@
 // Service worker: deja abrir la app sin internet.
 // Red primero (así siempre ves la última versión) y, si no hay conexión, lo guardado.
-const CACHE = "control-peso-v10";
+const CACHE = "control-peso-v11";
 const ARCHIVOS = [
   "./", "index.html", "styles.css", "manifest.webmanifest", "icon-192.png", "icon-512.png",
   "vendor/chart.umd.min.js", "img/guia-medidas.jpg",

@@ -199,11 +199,12 @@ package.json     — solo `"type": "module"` y el script de tests
 
 ## Ritmo configurable (agregado a pedido del usuario)
 
-- El ritmo (kg/semana) usa el **promedio de cada semana terminada** (la semana en curso no cuenta), no días sueltos.
-- Base elegible en un pop-up del Resumen (tocando "Ritmo" o "Llegás en"): última semana, último mes (por defecto),
-  desde el inicio de la dieta, o últimas N semanas (1–104). Se guarda en `perfil.baseRitmo` (sincronizado) y aplica
-  a todas las metas, al estado "vas bien / atrasado" y al aviso de estancado.
-- Si la semana de referencia no tiene pesos, se usa la anterior más cercana y se divide por la distancia real.
+- El ritmo (kg/semana) cuenta **todos los días pesados del período, hasta hoy** (incluida la semana en curso): es la
+  pendiente de la recta de mínimos cuadrados sobre esos pesos. Relleno y días de otra dieta no cuentan.
+- Base elegible en un pop-up del Resumen (tocando "Ritmo" o "Llegás en"): últimos 7 días, últimos 30 días (por
+  defecto), desde el inicio de la dieta, o últimas N semanas (N × 7 días, 1–104). Se guarda en `perfil.baseRitmo`
+  (sincronizado) y aplica a todas las metas, al estado "vas bien / atrasado" y al aviso de estancado.
+- Con ritmo < 0,1 kg/semana no se estiman semanas ("— estancado" o "— subiendo") para no mostrar cientos de semanas.
 
 ## Fuera de alcance (YAGNI)
 
