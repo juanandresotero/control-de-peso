@@ -8,7 +8,7 @@ const siNo = (v) => (v ? "sí" : "no");
 const fecha = (iso) => (iso ? { fecha: iso } : "");
 
 function hojaDias(datos) {
-  const filas = [["Fecha", "Peso (kg)", "Comida", "Ejercicio", "Movimiento", "Relleno", "Dieta", "Semana"]];
+  const filas = [["Fecha", "Peso (kg)", "Comida", "Ejercicio", "Día activo", "Relleno", "Dieta", "Semana"]];
   for (const f of Object.keys(datos.dias).sort()) {
     const d = datos.dias[f];
     const etapa = etapaDe(f, datos.etapas);

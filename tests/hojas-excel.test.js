@@ -18,7 +18,7 @@ test("hojasExcel arma Días, Semanas, Medidas y Etapas y metas", () => {
   assert.deepEqual(hojas.map((h) => h.nombre), ["Días", "Semanas", "Medidas", "Etapas y metas"]);
   const [dias, semanas, medidas, etapas] = hojas;
 
-  assert.deepEqual(dias.filas[0], ["Fecha", "Peso (kg)", "Comida", "Ejercicio", "Movimiento", "Relleno", "Dieta", "Semana"]);
+  assert.deepEqual(dias.filas[0], ["Fecha", "Peso (kg)", "Comida", "Ejercicio", "Día activo", "Relleno", "Dieta", "Semana"]);
   assert.deepEqual(dias.filas[1], [{ fecha: "2026-11-08" }, 96, "plato malo", "sí", "no", "no", "Dieta 2026", 1]);
   assert.deepEqual(dias.filas[2].slice(3, 5), ["no", "sí"]);
   assert.equal(dias.filas.length, 3);

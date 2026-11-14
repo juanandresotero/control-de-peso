@@ -47,7 +47,7 @@ export function pintar(ctx) {
         <span style="background:var(--rojo-fondo);color:#fff">Plato malo</span>
         <span style="background:var(--naranja)">No fue falta de voluntad</span>
         <span style="background:var(--azul)">Ejercicio</span>
-        <span style="background:var(--celeste)">Movimiento</span>
+        <span style="background:var(--celeste)">Día activo</span>
         <span style="box-shadow:inset 0 0 0 3px var(--amarillo)">Día objetivo</span>
         <span style="color:#9e9e9e;font-style:italic">Relleno</span>
       </div>

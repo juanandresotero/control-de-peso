@@ -43,7 +43,7 @@ fórmulas rotas: peso actual, kilos perdidos, semanas restantes y promedio).
       peso: 95.5,              // número con 1 decimal, o null si ese día no se pesó
       comida: "bien",          // "bien" | "tentacion" | "plato" | "justificado"
       ejercicio: false,
-      movimiento: false,       // me moví mucho sin hacer ejercicio (agregado 2026-11-14)
+      movimiento: false,       // día activo: me moví mucho sin hacer ejercicio (agregado 2026-11-14)
       estimado: false,         // true = número de relleno (importado del Excel)
       mod: 1763040000000       // última modificación (ms), para mezclar entre aparatos
     }
@@ -103,7 +103,7 @@ reciente; `marcasSemana` no se edita desde la app (solo importación). Los borra
 ## Pantallas
 
 1. **Cargar** (pantalla de inicio): fecha (hoy por defecto, se puede cambiar para editar días previos),
-   peso con teclado numérico y decimal (acepta coma o punto), 4 botones de comida, botones ejercicio / me moví mucho (uno u otro),
+   peso con teclado numérico y decimal (acepta coma o punto), 4 botones de comida, botones ejercicio / día activo (uno u otro),
    Guardar. Si el día ya existe, se precarga para editar. Opción "Borrar este día".
 2. **Semanas**: tabla tipo Excel, la más reciente arriba. Por fila: Semana N, fechas, 7 días con colores,
    peso de la semana, diferencia vs la anterior (verde si bajó, rojo si subió), ✓/✗.

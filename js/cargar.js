@@ -37,7 +37,7 @@ export function iniciar(ctx, elemento) {
       <div class="opciones">
         ${OPCIONES_COMIDA.map((o) => `<button class="opcion" data-comida="${o.valor}"><span class="icono">${o.icono}</span>${o.texto}</button>`).join("")}
         <button class="opcion actividad ejercicio" id="c-ejercicio"><span class="icono">🏃</span>Hice ejercicio</button>
-        <button class="opcion actividad movimiento" id="c-movimiento"><span class="icono">🚶</span>Me moví mucho</button>
+        <button class="opcion actividad movimiento" id="c-movimiento"><span class="icono">🚶</span>Día activo</button>
       </div>
     </div>
     <div class="zona-acciones">
