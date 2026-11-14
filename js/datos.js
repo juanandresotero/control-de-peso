@@ -1,0 +1,129 @@
+// Los datos de la app: guardarlos en el aparato, editarlos y mezclar lo de dos aparatos.
+// Cada día y cada etapa llevan `mod` (cuándo se tocó por última vez): al mezclar gana el más reciente.
+// Los borrados dejan una "lápida" en `tombs` para que el otro aparato también borre.
+
+const CLAVE = "control_peso_datos";
+const DIAS_LAPIDA = 60;
+const MS_DIA = 86400000;
+
+export const COMIDAS = {
+  bien: "bien",
+  tentacion: "tentación",
+  plato: "plato malo",
+  justificado: "no fue falta de voluntad",
+};
+
+export function vacio() {
+  return { version: 1, dias: {}, etapas: [], marcasSemana: {}, tombs: {} };
+}
+
+export function validarRespaldo(obj) {
+  return !!obj && typeof obj === "object" && !!obj.dias && typeof obj.dias === "object" && Array.isArray(obj.etapas);
+}
+
+export function cargar(storage = globalThis.localStorage) {
+  try {
+    const texto = storage.getItem(CLAVE);
+    const datos = texto ? JSON.parse(texto) : null;
+    return validarRespaldo(datos) ? { ...vacio(), ...datos } : vacio();
+  } catch {
+    return vacio();
+  }
+}
+
+export function guardarTodo(datos, storage = globalThis.localStorage) {
+  storage.setItem(CLAVE, JSON.stringify(datos));
+}
+
+export function leerPeso(texto) {
+  const limpio = String(texto ?? "").trim().replace(",", ".");
+  if (!limpio) return { ok: true, valor: null };
+  if (!/^\d{1,3}(\.\d+)?$/.test(limpio)) return { ok: false, error: "Escribí el peso con números, por ejemplo 95,5." };
+  const valor = Math.round(Number(limpio) * 10) / 10;
+  if (valor < 30 || valor > 300) return { ok: false, error: "El peso tiene que estar entre 30 y 300 kg." };
+  return { ok: true, valor };
+}
+
+export function guardarDia(datos, fecha, { peso = null, comida = "bien", ejercicio = false }, ahora = Date.now()) {
+  const dia = { peso, comida, ejercicio: !!ejercicio, estimado: false, mod: ahora };
+  return { ...datos, dias: { ...datos.dias, [fecha]: dia } };
+}
+
+export function borrarDia(datos, fecha, ahora = Date.now()) {
+  const dias = { ...datos.dias };
+  delete dias[fecha];
+  return { ...datos, dias, tombs: { ...datos.tombs, ["dia:" + fecha]: ahora } };
+}
+
+const porInicio = (a, b) => a.inicio.localeCompare(b.inicio);
+
+export function guardarEtapa(datos, etapa, ahora = Date.now()) {
+  const otras = datos.etapas.filter((e) => e.id !== etapa.id);
+  return { ...datos, etapas: [...otras, { ...etapa, mod: ahora }].sort(porInicio) };
+}
+
+export function borrarEtapa(datos, id, ahora = Date.now()) {
+  return {
+    ...datos,
+    etapas: datos.etapas.filter((e) => e.id !== id),
+    tombs: { ...datos.tombs, ["etapa:" + id]: ahora },
+  };
+}
+
+export function nuevoId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// Junta dos versiones de los datos. Ante empate se queda con la de `a` (este aparato).
+export function mezclar(a, b, ahora = Date.now()) {
+  const corte = ahora - DIAS_LAPIDA * MS_DIA;
+  const tombs = {};
+  for (const fuente of [a.tombs || {}, b.tombs || {}]) {
+    for (const [clave, cuando] of Object.entries(fuente)) {
+      if (cuando >= corte) tombs[clave] = Math.max(tombs[clave] || 0, cuando);
+    }
+  }
+  const vivo = (clave, item) => !(tombs[clave] && tombs[clave] >= (item.mod || 0));
+
+  const dias = { ...(a.dias || {}) };
+  for (const [fecha, dia] of Object.entries(b.dias || {})) {
+    if (!dias[fecha] || (dia.mod || 0) > (dias[fecha].mod || 0)) dias[fecha] = dia;
+  }
+  for (const fecha of Object.keys(dias)) if (!vivo("dia:" + fecha, dias[fecha])) delete dias[fecha];
+
+  const etapas = new Map((a.etapas || []).map((e) => [e.id, e]));
+  for (const etapa of b.etapas || []) {
+    const actual = etapas.get(etapa.id);
+    if (!actual || (etapa.mod || 0) > (actual.mod || 0)) etapas.set(etapa.id, etapa);
+  }
+
+  return {
+    version: 1,
+    dias,
+    etapas: [...etapas.values()].filter((e) => vivo("etapa:" + e.id, e)).sort(porInicio),
+    marcasSemana: { ...(b.marcasSemana || {}), ...(a.marcasSemana || {}) },
+    tombs,
+  };
+}
+
+function estable(valor) {
+  if (Array.isArray(valor)) return "[" + valor.map(estable).join(",") + "]";
+  if (valor && typeof valor === "object") {
+    return "{" + Object.keys(valor).sort().map((k) => JSON.stringify(k) + ":" + estable(valor[k])).join(",") + "}";
+  }
+  return JSON.stringify(valor);
+}
+
+export function iguales(a, b) {
+  return estable(a) === estable(b);
+}
+
+export function aCsv(datos) {
+  const filas = ["fecha;peso;comida;ejercicio;estimado"];
+  for (const fecha of Object.keys(datos.dias).sort()) {
+    const d = datos.dias[fecha];
+    const peso = d.peso == null ? "" : String(d.peso).replace(".", ",");
+    filas.push([fecha, peso, COMIDAS[d.comida] || "", d.ejercicio ? "sí" : "no", d.estimado ? "sí" : "no"].join(";"));
+  }
+  return filas.join("\r\n") + "\r\n";
+}
