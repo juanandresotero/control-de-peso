@@ -102,7 +102,7 @@ function graficaSemanal(canvas, datos, etapa, desde, hasta, hoy) {
       labels: semanas.map((s) => `Sem ${numeroSemana(s.lunes, etapa)}`),
       datasets: [
         {
-          label: "Peso de la semana", data: semanas.map((s) => (s.estimada ? null : s.peso)),
+          label: "Promedio de la semana", data: semanas.map((s) => s.promedio),
           borderColor: COLOR_LINEA, backgroundColor: COLOR_LINEA, borderWidth: 2.5, ...sinPuntos, tension: 0.2, segment: punteadoEnHuecos,
         },
         ...capasDeMetas(etapa.metas || [], semanas.length, indiceSemana),
@@ -154,7 +154,7 @@ export function pintar(ctx) {
     </div>
     ${etapa ? `
     <div class="tarjeta">
-      <h2>${esc(etapa.nombre)} · semana a semana</h2>
+      <h2>${esc(etapa.nombre)} · semana a semana (promedio)</h2>
       <p class="sutil" style="margin-top:0">Desde el ${formatoLargo(etapa.inicio)} hasta hoy</p>
       <div class="grafica"><canvas id="g-semanal"></canvas></div>
     </div>

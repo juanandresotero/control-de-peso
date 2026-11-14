@@ -194,6 +194,8 @@ package.json     — solo `"type": "module"` y el script de tests
   Medidas, Etapas y metas) y la fecha del último Excel descargado (`perfil.ultimoExcel`, sincronizada).
   Reemplaza al CSV. El respaldo JSON de la app sigue para restaurar.
 - Descartado por el usuario: aviso de días sin pesarse y recordatorio de respaldo.
+- Gráfica semana a semana: usa el **promedio** de los pesos reales de cada semana (no el domingo). La pantalla
+  Semanas sigue mostrando el peso del último día. El Excel trae las dos columnas.
 
 ## Fuera de alcance (YAGNI)
 

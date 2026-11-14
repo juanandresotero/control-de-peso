@@ -41,6 +41,18 @@ test("resumenSemana: peso = último real de la semana", () => {
   assert.equal(s.enCurso, false);
 });
 
+test("resumenSemana: promedio de los pesos reales de la semana", () => {
+  const dias = {
+    "2026-11-09": dia(96.6), "2026-11-10": dia(95.5), "2026-11-11": dia(95.0),
+    "2026-11-12": dia(99, null, { estimado: true }), // relleno: no entra en el promedio
+    "2026-11-13": dia(95.5),
+  };
+  assert.equal(resumenSemana("2026-11-09", dias, {}, "2026-11-20").promedio, 95.7); // (96,6+95,5+95+95,5)/4 = 95,65
+  assert.equal(resumenSemana("2026-11-16", dias, {}, "2026-11-20").promedio, null);
+  const soloRelleno = { "2025-10-06": dia(95.2, null, { estimado: true }) };
+  assert.equal(resumenSemana("2025-10-06", soloRelleno, {}, "2026-11-13").promedio, null);
+});
+
 test("resumenSemana: si solo hay estimados, usa el último y marca estimada", () => {
   const dias = { "2025-10-06": dia(95.2, null, { estimado: true }), "2025-10-12": dia(96, null, { estimado: true }) };
   const s = resumenSemana("2025-10-06", dias, {}, "2026-11-13");

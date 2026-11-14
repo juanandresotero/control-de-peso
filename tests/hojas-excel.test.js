@@ -22,9 +22,9 @@ test("hojasExcel arma Días, Semanas, Medidas y Etapas y metas", () => {
   assert.deepEqual(dias.filas[1], [{ fecha: "2026-11-08" }, 96, "plato malo", "sí", "no", "Dieta 2026", 1]);
   assert.equal(dias.filas.length, 3);
 
-  assert.deepEqual(semanas.filas[0], ["Dieta", "Semana", "Desde", "Hasta", "Peso (kg)", "Bajó (kg)", "Semana perfecta"]);
-  assert.deepEqual(semanas.filas[1], ["Dieta 2026", 1, { fecha: "2026-11-02" }, { fecha: "2026-11-08" }, 96, 1, "✗"]);
-  assert.deepEqual(semanas.filas[2].slice(4), [95.5, 0.5, "✓"]);
+  assert.deepEqual(semanas.filas[0], ["Dieta", "Semana", "Desde", "Hasta", "Peso último día (kg)", "Promedio (kg)", "Bajó (kg)", "Semana perfecta"]);
+  assert.deepEqual(semanas.filas[1], ["Dieta 2026", 1, { fecha: "2026-11-02" }, { fecha: "2026-11-08" }, 96, 96, 1, "✗"]);
+  assert.deepEqual(semanas.filas[2].slice(4), [95.5, 95.5, 0.5, "✓"]);
 
   assert.equal(medidas.filas[0][1], "% grasa");
   assert.ok(medidas.filas[0].includes("Tobillo (cm)"));

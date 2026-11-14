@@ -41,11 +41,14 @@ export function resumenSemana(lunes, dias, marcasSemana, hoy) {
       if (MALAS.has(dia.comida)) hayMala = true;
     }
   }
+  // Promedio de los pesos reales (en décimas de kg, para que el redondeo no falle con decimales).
+  const decimas = celdas.filter((c) => esReal(c.dia)).map((c) => Math.round(c.dia.peso * 10));
+  const promedio = decimas.length ? Math.round(decimas.reduce((a, b) => a + b, 0) / decimas.length) / 10 : null;
   const estimada = peso == null && ultimoEstimado != null;
   if (estimada) peso = ultimoEstimado;
   const importada = (marcasSemana && marcasSemana[lunes]) || null;
   const marca = importada || (hayMala ? "✗" : hayDatos ? "✓" : null);
-  return { lunes, dias: celdas, peso, estimada, marca, importada: !!importada, enCurso: lunes === lunesDe(hoy) };
+  return { lunes, dias: celdas, peso, promedio, estimada, marca, importada: !!importada, enCurso: lunes === lunesDe(hoy) };
 }
 
 export function listaSemanas(datos, desde, hasta, pesoBase, hoy) {

@@ -19,12 +19,12 @@ function hojaDias(datos) {
 }
 
 function hojaSemanas(datos, hoy) {
-  const filas = [["Dieta", "Semana", "Desde", "Hasta", "Peso (kg)", "Bajó (kg)", "Semana perfecta"]];
+  const filas = [["Dieta", "Semana", "Desde", "Hasta", "Peso último día (kg)", "Promedio (kg)", "Bajó (kg)", "Semana perfecta"]];
   for (const etapa of datos.etapas) {
     const { desde, hasta } = rangoEtapa(etapa, datos.etapas, hoy);
     for (const s of listaSemanas(datos, desde, hasta < hoy ? hasta : hoy, etapa.pesoInicial, hoy)) {
       filas.push([etapa.nombre, numeroSemana(s.lunes, etapa), fecha(s.lunes), fecha(sumarDias(s.lunes, 6)),
-        s.peso ?? "", s.diferencia ?? "", s.marca || ""]);
+        s.peso ?? "", s.promedio ?? "", s.diferencia ?? "", s.marca || ""]);
     }
   }
   return { nombre: "Semanas", filas };
