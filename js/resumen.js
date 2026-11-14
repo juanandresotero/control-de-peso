@@ -1,5 +1,6 @@
 // Pantalla Resumen: los números que importan de la dieta actual, con poco texto.
-import { resumenEtapa, rangoEtapa } from "./calculos.js";
+import { resumenEtapa, rangoEtapa, etiquetaBase, BASE_RITMO_INICIAL } from "./calculos.js";
+import { guardarPerfil } from "./datos.js";
 import { balanceComidas } from "./habitos.js";
 import { formatoCorto } from "./fechas.js";
 import { esc, kg, etapaPorDefecto, sinEtapas } from "./ui.js";
@@ -10,33 +11,90 @@ let raiz;
 export function iniciar(ctx, elemento) {
   raiz = elemento;
   raiz.addEventListener("click", (e) => {
-    if (!e.target.closest("[data-ir-ajustes]")) return;
-    e.preventDefault();
-    ctx.irA("ajustes");
+    if (e.target.closest("[data-ir-ajustes]")) {
+      e.preventDefault();
+      return ctx.irA("ajustes");
+    }
+    if (e.target.closest("[data-elegir-base]")) return abrirBase(ctx);
+    if (e.target.closest("#r-cancelar")) return raiz.querySelector("#r-base").close();
+    if (e.target.closest("#r-confirmar")) return confirmarBase(ctx);
   });
+  // Escribir en la caja de semanas elige esa opción.
+  raiz.addEventListener("focusin", (e) => { if (e.target.id === "r-n") raiz.querySelector("#r-otra").checked = true; });
+}
+
+// --- Pop-up: sobre qué período se calcula el ritmo (vale para todas las metas) ---
+const baseDe = (datos) => datos.perfil?.baseRitmo || BASE_RITMO_INICIAL;
+
+function dialogoBase() {
+  return `<dialog id="r-base" class="dialogo-base" aria-label="Calcular el ritmo con">
+    <h2>Calcular el ritmo con…</h2>
+    <label><input type="radio" name="r-base" value="1"> Última semana</label>
+    <label><input type="radio" name="r-base" value="4"> Último mes</label>
+    <label><input type="radio" name="r-base" value="inicio"> Desde que arrancó la dieta</label>
+    <label><input type="radio" name="r-base" value="otra" id="r-otra"> Últimas
+      <input type="number" id="r-n" min="1" max="104" step="1" inputmode="numeric"> semanas</label>
+    <p class="sutil">Usa el promedio de cada semana terminada.</p>
+    <div class="mensaje error" id="r-msg"></div>
+    <div class="fila" style="justify-content:flex-end">
+      <button class="boton" type="button" id="r-cancelar">Cancelar</button>
+      <button class="boton principal" type="button" id="r-confirmar">Confirmar</button>
+    </div>
+  </dialog>`;
+}
+
+function abrirBase(ctx) {
+  const base = baseDe(ctx.datos());
+  const valor = base.modo === "inicio" ? "inicio" : [1, 4].includes(base.semanas) ? String(base.semanas) : "otra";
+  raiz.querySelector(`[name=r-base][value="${valor}"]`).checked = true;
+  raiz.querySelector("#r-n").value = base.modo === "semanas" && valor === "otra" ? base.semanas : 8;
+  raiz.querySelector("#r-msg").textContent = "";
+  raiz.querySelector("#r-base").showModal();
+}
+
+function confirmarBase(ctx) {
+  const elegido = raiz.querySelector("[name=r-base]:checked")?.value;
+  let base;
+  if (elegido === "inicio") base = { modo: "inicio" };
+  else if (elegido === "otra") {
+    const n = Number(raiz.querySelector("#r-n").value);
+    if (!Number.isInteger(n) || n < 1 || n > 104) {
+      raiz.querySelector("#r-msg").textContent = "Poné una cantidad de semanas entre 1 y 104.";
+      return;
+    }
+    base = { modo: "semanas", semanas: n };
+  } else base = { modo: "semanas", semanas: Number(elegido) };
+  raiz.querySelector("#r-base").close();
+  ctx.cambiar(guardarPerfil(ctx.datos(), { baseRitmo: base }));
+  ctx.avisar(`✓ Ritmo: ${etiquetaBase(base)}`);
 }
 
 const stat = (etiqueta, valor, extra = "", clase = "") =>
   `<div class="stat ${clase}"><span>${etiqueta}</span><b>${valor}</b>${extra ? `<small>${extra}</small>` : ""}</div>`;
+// Igual que stat, pero se toca para elegir sobre qué período se calcula el ritmo.
+const statBoton = (etiqueta, valor, extra = "") =>
+  `<button type="button" class="stat clic" data-elegir-base><span>${etiqueta}</span><b>${valor}</b>${extra ? `<small>${extra}</small>` : ""}</button>`;
 
 export function pintar(ctx) {
   const datos = ctx.datos();
   const hoy = ctx.hoy();
   const etapa = etapaPorDefecto(datos, hoy);
   if (!etapa) { raiz.innerHTML = sinEtapas(); return; }
-  const r = resumenEtapa(datos, etapa, hoy);
+  const base = baseDe(datos);
+  const etiqueta = etiquetaBase(base);
+  const r = resumenEtapa(datos, etapa, hoy, base);
   const bajo = r.kilosPerdidos >= 0;
 
   raiz.innerHTML = `
-    ${alertaRitmo(r)}
+    ${alertaRitmo(r, etiqueta)}
     <div class="tarjeta">
       <div class="stats">
         ${stat("Peso actual", `${kg(r.pesoActual)} kg`, formatoCorto(r.fechaActual), "destacado")}
         ${stat(bajo ? "Bajaste" : "Subiste", `${kg(Math.abs(r.kilosPerdidos))} kg`, `${kg(Math.abs(r.porcentaje) * 100)}% · semana ${r.semanaNumero}`)}
-        ${stat("Ritmo último mes", ritmo(r.ritmo4), "por semana")}
+        ${statBoton(`Ritmo · ${etiqueta} ✎`, ritmo(r.ritmo), "por semana")}
       </div>
     </div>
-    ${r.metas.length ? r.metas.map(tarjetaMeta).join("")
+    ${r.metas.length ? r.metas.map((m) => tarjetaMeta(m, etiqueta)).join("")
       : `<div class="tarjeta sutil">Sin metas. <a href="#" data-ir-ajustes>Agregalas en Ajustes</a>.</div>`}
     <div class="tarjeta">
       <div class="stats">
@@ -46,7 +104,8 @@ export function pintar(ctx) {
     </div>
     ${tarjetaComidas(datos, etapa, hoy)}
     ${tarjetaCuerpo(datos, r.pesoActual)}
-    ${tarjetaMedidas(datos)}`;
+    ${tarjetaMedidas(datos)}
+    ${dialogoBase()}`;
 }
 
 // Días que comiste bien y mal en esta dieta (tentación = medio día malo) y tu día más difícil.
@@ -109,9 +168,9 @@ function tarjetaMedidas(datos) {
 // "−0,45 kg" si bajó, "+0,02 kg" si subió
 const ritmo = (n) => (n == null ? "—" : `${n > 0 ? "−" : n < 0 ? "+" : ""}${kg(Math.abs(n), 2)} kg`);
 
-function alertaRitmo(r) {
-  if (r.ritmo4 == null || r.ritmo4 > 0.1) return "";
-  return `<div class="alerta ancho-completo">⚠️ ${r.ritmo4 < 0 ? "El último mes subiste" : "Estás estancado"}</div>`;
+function alertaRitmo(r, etiqueta) {
+  if (r.ritmo == null || r.ritmo > 0.1) return "";
+  return `<div class="alerta ancho-completo">⚠️ ${r.ritmo < 0 ? "Subiendo" : "Estancado"} (${etiqueta})</div>`;
 }
 
 function estaSemana(r) {
@@ -127,14 +186,14 @@ const ESTADOS = {
   vencido: ["mal", "⛔ Fecha vencida"],
 };
 
-function tarjetaMeta(m) {
+function tarjetaMeta(m, etiqueta) {
   const { meta } = m;
   const pct = Math.round(m.avance * 100);
   const llegada = m.alcanzada ? "¡Listo!"
     : m.semanasParaLlegar == null ? "—"
     : `${kg(m.semanasParaLlegar, m.semanasParaLlegar < 10 ? 1 : 0)} sem`;
   const llegadaExtra = m.alcanzada || m.semanasParaLlegar == null
-    ? (m.alcanzada ? "" : "el último mes no bajaste")
+    ? (m.alcanzada ? "" : `${etiqueta}: sin bajar`)
     : `${kg(m.mesesParaLlegar)} meses · ${formatoCorto(m.fechaEstimada)}/${m.fechaEstimada.slice(2, 4)}`;
 
   let objetivo;
@@ -155,7 +214,7 @@ function tarjetaMeta(m) {
     <div class="fila"><div class="barra crece"><div style="width:${pct}%"></div></div><b>${pct}%</b></div>
     <div class="stats">
       ${stat("Faltan", m.alcanzada ? "0 kg" : `${kg(m.faltan)} kg`)}
-      ${stat("Llegás en", llegada, llegadaExtra)}
+      ${m.alcanzada ? stat("Llegás en", llegada) : statBoton("Llegás en ✎", llegada, llegadaExtra)}
     </div>
     ${objetivo}
   </div>`;

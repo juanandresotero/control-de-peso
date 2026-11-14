@@ -63,26 +63,45 @@ export function listaSemanas(datos, desde, hasta, pesoBase, hoy) {
   return semanas;
 }
 
-// Kilos por semana de las últimas 4 semanas (solo pesos reales). null si no hay con qué comparar.
-function ritmoUltimas4(semanas) {
-  const conPeso = (s) => s && s.peso != null && !s.estimada;
-  for (let i = semanas.length - 1; i >= 4; i--) {
-    if (!conPeso(semanas[i])) continue;
-    return conPeso(semanas[i - 4]) ? (semanas[i - 4].peso - semanas[i].peso) / 4 : null;
+// Base del ritmo: { modo: "semanas", semanas: N } (últimas N semanas) o { modo: "inicio" } (desde que arrancó la dieta).
+export const BASE_RITMO_INICIAL = { modo: "semanas", semanas: 4 };
+
+export function etiquetaBase(base) {
+  if (base.modo === "inicio") return "desde el inicio";
+  if (base.semanas === 1) return "última semana";
+  if (base.semanas === 4) return "último mes";
+  return `últimas ${base.semanas} semanas`;
+}
+
+// Kilos por semana que venís bajando (negativo = subiendo), con el PROMEDIO de cada semana terminada
+// (un día suelto sube o baja medio kilo por agua; el promedio de la semana es más confiable).
+// La semana en curso no cuenta hasta que termina. null si no hay con qué comparar.
+export function calcularRitmo(semanas, etapa, base, hoy) {
+  const lunesHoy = lunesDe(hoy);
+  const conPromedio = semanas.filter((s) => s.lunes < lunesHoy && s.promedio != null);
+  const ultima = conPromedio.at(-1);
+  if (!ultima) return null;
+  if (base.modo === "inicio") {
+    const semanasDesdeInicio = (diasEntre(etapa.inicio, ultima.lunes) + 3) / 7; // el promedio cae a mitad de semana
+    return semanasDesdeInicio > 0 ? (etapa.pesoInicial - ultima.promedio) / semanasDesdeInicio : null;
   }
-  return null;
+  // La semana de hace N semanas; si no tiene pesos, la anterior más cercana que tenga.
+  const objetivo = sumarDias(ultima.lunes, -7 * base.semanas);
+  const referencia = conPromedio.filter((s) => s.lunes <= objetivo).at(-1);
+  if (!referencia) return null;
+  return (referencia.promedio - ultima.promedio) / (diasEntre(referencia.lunes, ultima.lunes) / 7);
 }
 
 const DIAS_POR_MES = 30.4375;
 
-// La estimación usa el ritmo del último mes (`ritmo4`, kg por semana), que dice mejor cómo venís ahora.
+// La estimación usa el ritmo (kg por semana) calculado con la base que eligió el usuario.
 // estado: "logrado" | "vencido" | "bien" | "atrasado" | null (sin día objetivo).
-function resumenMeta(meta, { pesoInicial, pesoActual, fechaActual, ritmo4, hoy }) {
+function resumenMeta(meta, { pesoInicial, pesoActual, fechaActual, ritmo, hoy }) {
   const faltan = redondear1(pesoActual - meta.peso);
   const total = pesoInicial - meta.peso;
   const avance = total > 0 ? Math.min(1, Math.max(0, (pesoInicial - pesoActual) / total)) : 1;
   const alcanzada = faltan <= 0;
-  const semanas = !alcanzada && ritmo4 > 0 ? faltan / ritmo4 : null;
+  const semanas = !alcanzada && ritmo > 0 ? faltan / ritmo : null;
   const semanasParaLlegar = semanas == null ? null : redondear1(semanas);
   const mesesParaLlegar = semanas == null ? null : redondear1((semanas * 7) / DIAS_POR_MES);
   const fechaEstimada = semanas == null ? null : sumarDias(fechaActual, Math.ceil(semanas * 7));
@@ -92,7 +111,7 @@ function resumenMeta(meta, { pesoInicial, pesoActual, fechaActual, ritmo4, hoy }
     semanasRestantes = redondear1(diasEntre(hoy, meta.fecha) / 7);
     if (!alcanzada && semanasRestantes > 0) kgPorSemana = Math.round((faltan / semanasRestantes) * 100) / 100;
     if (vencida) estado = "vencido";
-    else if (!alcanzada) estado = ritmo4 != null && kgPorSemana != null && ritmo4 >= kgPorSemana ? "bien" : "atrasado";
+    else if (!alcanzada) estado = ritmo != null && kgPorSemana != null && ritmo >= kgPorSemana ? "bien" : "atrasado";
   }
   return {
     meta, faltan, avance, alcanzada, semanasParaLlegar, mesesParaLlegar, fechaEstimada,
@@ -100,7 +119,7 @@ function resumenMeta(meta, { pesoInicial, pesoActual, fechaActual, ritmo4, hoy }
   };
 }
 
-export function resumenEtapa(datos, etapa, hoy) {
+export function resumenEtapa(datos, etapa, hoy, base = BASE_RITMO_INICIAL) {
   const { desde, hasta } = rangoEtapa(etapa, datos.etapas, hoy);
   const reales = Object.entries(datos.dias)
     .filter(([fecha, dia]) => fecha >= desde && fecha <= hasta && esReal(dia))
@@ -120,15 +139,15 @@ export function resumenEtapa(datos, etapa, hoy) {
   let racha = 0;
   for (let i = cerradas.length - 1; i >= 0 && cerradas[i].marca === "✓"; i--) racha++;
 
-  const ritmo4 = ritmoUltimas4(semanas);
-  const contexto = { pesoInicial, pesoActual, fechaActual, ritmo4, hoy };
+  const ritmo = calcularRitmo(semanas, etapa, base, hoy);
+  const contexto = { pesoInicial, pesoActual, fechaActual, ritmo, hoy };
   return {
     pesoInicial, pesoActual, fechaActual, mejorPeso,
     kilosPerdidos: redondear1(pesoInicial - pesoActual),
     porcentaje: pesoInicial ? redondear1(pesoInicial - pesoActual) / pesoInicial : 0,
     semanaNumero: numeroSemana(ultimoDia, etapa),
     promedioSemanal,
-    ritmo4,
+    ritmo,
     semanasOk: cerradas.filter((s) => s.marca === "✓").length,
     semanasMal: cerradas.filter((s) => s.marca === "✗").length,
     racha,

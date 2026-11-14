@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   etapaDe, rangoEtapa, numeroSemana, resumenSemana, listaSemanas, resumenEtapa, serieDiaria, diasObjetivo,
+  calcularRitmo, etiquetaBase,
 } from "../js/calculos.js";
 
 const dia = (peso, comida = "bien", extra = {}) => ({ peso, comida, ejercicio: false, estimado: false, mod: 1, ...extra });
@@ -118,7 +119,8 @@ test("resumenEtapa: números principales", () => {
   assert.equal(r.kilosPerdidos, 4.4);
   assert.ok(Math.abs(r.porcentaje - 0.044) < 1e-9);
   assert.ok(Math.abs(r.promedioSemanal - 4.4 / (36 / 7)) < 1e-9);
-  assert.ok(Math.abs(r.ritmo4 - 0.6) < 1e-9);
+  // Ritmo por defecto: último mes, con promedios de semanas terminadas (sem 1: 99,3 → sem 5: 96,0).
+  assert.ok(Math.abs(r.ritmo - (99.3 - 96) / 4) < 1e-9);
   assert.equal(r.semanaNumero, 6);
   assert.equal(r.semanasOk, 4);
   assert.equal(r.semanasMal, 1);
@@ -138,10 +140,10 @@ test("resumenEtapa: metas", () => {
   assert.equal(a.faltan, 5.6);
   assert.ok(Math.abs(a.avance - 0.44) < 1e-9);
   assert.equal(a.alcanzada, false);
-  // La estimación usa el ritmo del último mes (0,6 kg/sem): 5,6 / 0,6 = 9,3 semanas ≈ 2,1 meses.
-  assert.equal(a.semanasParaLlegar, 9.3);
-  assert.equal(a.mesesParaLlegar, 2.1);
-  assert.equal(a.fechaEstimada, "2026-04-17");
+  // Ritmo del último mes = 0,825 kg/sem: 5,6 / 0,825 = 6,8 semanas ≈ 1,6 meses.
+  assert.equal(a.semanasParaLlegar, 6.8);
+  assert.equal(a.mesesParaLlegar, 1.6);
+  assert.equal(a.fechaEstimada, "2026-03-30");
   assert.equal(a.estado, null); // sin fecha objetivo no hay "bien / atrasado"
   assert.equal(b.alcanzada, true);
   assert.equal(b.avance, 1);
@@ -153,7 +155,7 @@ test("resumenEtapa: metas", () => {
   assert.equal(d.vencida, false);
   assert.equal(d.semanasRestantes, 4);
   assert.equal(d.kgPorSemana, 0.9);
-  assert.equal(d.estado, "atrasado"); // necesita 0,9 kg/sem y viene bajando 0,6
+  assert.equal(d.estado, "atrasado"); // necesita 0,9 kg/sem y viene bajando 0,83
   assert.equal(e.kgPorSemana, 0.15);
   assert.equal(e.estado, "bien");
 });
@@ -173,9 +175,38 @@ test("resumenEtapa: si el último mes subiste, no hay estimación aunque el prom
   ["2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08"].forEach((f, i) => { dias[f] = dia([90, 89, 89.5, 90, 91][i]); });
   const r = resumenEtapa({ etapas: [etapa], marcasSemana: {}, dias }, etapa, "2026-02-09");
   assert.ok(r.promedioSemanal > 0);
-  assert.ok(r.ritmo4 < 0);
+  assert.ok(r.ritmo < 0);
   assert.equal(r.metas[0].fechaEstimada, null);
   assert.equal(r.metas[0].semanasParaLlegar, null);
+});
+
+test("calcularRitmo: según la base elegida, con promedios de semanas terminadas", () => {
+  const { datos, etapa } = datosEjemplo([]);
+  const hoy = "2026-02-11";
+  const semanas = listaSemanas(datos, etapa.inicio, hoy, etapa.pesoInicial, hoy);
+  const ritmo = (base) => calcularRitmo(semanas, etapa, base, hoy);
+  const cerca = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} ≠ ${b}`);
+  cerca(ritmo({ modo: "semanas", semanas: 1 }), 0.5);           // sem 4: 96,5 → sem 5: 96,0
+  cerca(ritmo({ modo: "semanas", semanas: 2 }), 0.5);           // sem 3: 97,0 → 96,0 en 2 semanas
+  cerca(ritmo({ modo: "semanas", semanas: 4 }), 3.3 / 4);       // sem 1: 99,3 → 96,0 en 4 semanas
+  cerca(ritmo({ modo: "inicio" }), 4 / (31 / 7));                // 100 → 96,0 en 4,4 semanas
+  assert.equal(ritmo({ modo: "semanas", semanas: 10 }), null);          // no hay tanta historia
+});
+
+test("calcularRitmo: si la semana de referencia no tiene pesos, usa la anterior más cercana", () => {
+  const { datos, etapa } = datosEjemplo([]);
+  delete datos.dias["2026-01-25"]; // la semana 3 queda vacía
+  const hoy = "2026-02-11";
+  const semanas = listaSemanas(datos, etapa.inicio, hoy, etapa.pesoInicial, hoy);
+  const r = calcularRitmo(semanas, etapa, { modo: "semanas", semanas: 2 }, hoy);
+  assert.ok(Math.abs(r - 2.3 / 3) < 1e-9); // sem 2: 98,3 → 96,0 en 3 semanas
+});
+
+test("etiquetaBase", () => {
+  assert.equal(etiquetaBase({ modo: "semanas", semanas: 1 }), "última semana");
+  assert.equal(etiquetaBase({ modo: "semanas", semanas: 4 }), "último mes");
+  assert.equal(etiquetaBase({ modo: "semanas", semanas: 8 }), "últimas 8 semanas");
+  assert.equal(etiquetaBase({ modo: "inicio" }), "desde el inicio");
 });
 
 test("resumenEtapa ignora estimados para el peso actual", () => {

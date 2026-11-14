@@ -135,6 +135,14 @@ select { width: 100%; }
 .stat > span { color: var(--gris); font-size: .85rem; }
 .stat b { font-size: 1.6rem; line-height: 1.2; }
 .stat small { color: var(--gris); font-size: .8rem; }
+.stat.clic { border: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.stat.clic:hover { box-shadow: inset 0 0 0 2px var(--verde-claro); }
+.stat.clic > span { color: var(--verde); }
+.dialogo-base { border: 0; border-radius: var(--radio); padding: 16px; width: min(92vw, 420px); }
+.dialogo-base::backdrop { background: rgba(0, 0, 0, .5); }
+.dialogo-base h2 { margin: 0 0 10px; font-size: 1.05rem; }
+.dialogo-base label { display: flex; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 1px solid #f0f0f0; }
+.dialogo-base input[type="number"] { width: 72px; padding: 6px 8px; border: 1px solid var(--borde); border-radius: 8px; text-align: center; }
 .objetivo-fila { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 12px; }
 .chip { padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: .9rem; }
 .chip.ok { background: var(--verde-claro); color: var(--verde); }

@@ -197,6 +197,14 @@ package.json     — solo `"type": "module"` y el script de tests
 - Gráfica semana a semana: usa el **promedio** de los pesos reales de cada semana (no el domingo). La pantalla
   Semanas sigue mostrando el peso del último día. El Excel trae las dos columnas.
 
+## Ritmo configurable (agregado a pedido del usuario)
+
+- El ritmo (kg/semana) usa el **promedio de cada semana terminada** (la semana en curso no cuenta), no días sueltos.
+- Base elegible en un pop-up del Resumen (tocando "Ritmo" o "Llegás en"): última semana, último mes (por defecto),
+  desde el inicio de la dieta, o últimas N semanas (1–104). Se guarda en `perfil.baseRitmo` (sincronizado) y aplica
+  a todas las metas, al estado "vas bien / atrasado" y al aviso de estancado.
+- Si la semana de referencia no tiene pesos, se usa la anterior más cercana y se divide por la distancia real.
+
 ## Fuera de alcance (YAGNI)
 
 Notas por día, fotos, recordatorios/notificaciones, varios usuarios, registro de comidas.
