@@ -1,11 +1,11 @@
 // Service worker: deja abrir la app sin internet.
 // Red primero (así siempre ves la última versión) y, si no hay conexión, lo guardado.
-const CACHE = "control-peso-v15";
+const CACHE = "control-peso-v16";
 const ARCHIVOS = [
   "./", "index.html", "styles.css", "manifest.webmanifest", "icon-192.png", "icon-512.png",
   "vendor/chart.umd.min.js", "img/guia-medidas.jpg",
-  "js/app.js", "js/ui.js", "js/fechas.js", "js/calculos.js", "js/datos.js", "js/sync.js", "js/respaldo.js", "js/excel.js", "js/hojas-excel.js", "js/habitos.js",
-  "js/cargar.js", "js/cargar-medidas.js", "js/cuerpo.js", "js/semanas.js", "js/resumen.js", "js/graficas.js", "js/ajustes.js",
+  "js/app.js", "js/ui.js", "js/fechas.js", "js/calculos.js", "js/datos.js", "js/sync.js", "js/respaldo.js", "js/excel.js", "js/hojas-excel.js", "js/habitos.js", "js/deslices.js",
+  "js/cargar.js", "js/cargar-medidas.js", "js/cargar-desliz.js", "js/cuerpo.js", "js/semanas.js", "js/resumen.js", "js/graficas.js", "js/ajustes.js",
 ];
 
 self.addEventListener("install", (e) => {

@@ -125,6 +125,22 @@ select { width: 100%; }
 .dia.objetivo { box-shadow: inset 0 0 0 3px var(--amarillo); }
 .dia.hoy { border-color: var(--verde); border-width: 2px; }
 .dia .corre { position: absolute; top: 1px; right: 2px; font-size: .6rem; }
+.dia .nota { position: absolute; top: 1px; left: 2px; font-size: .6rem; }
+.dia { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+/* Cargar: qué comiste en un día malo */
+.desliz { margin-top: 14px; border-top: 1px solid var(--borde); padding-top: 4px; }
+.desliz h3 { font-size: .95rem; margin: 10px 0 8px; }
+.desliz-fila { display: flex; gap: 6px; margin-bottom: 6px; }
+.desliz-fila input { min-width: 0; padding: 8px; border: 1px solid var(--borde); border-radius: 8px; font: inherit; }
+.desliz-fila .d-hora { flex: 0 0 auto; width: 110px; }
+.desliz-fila .d-que { flex: 1; }
+.boton.chico { padding: 6px 12px; font-size: .9rem; }
+.cuanto { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.cuanto .opcion { padding: 10px 6px; font-size: .9rem; }
+.cuanto .opcion.elegida { border-color: var(--rojo); background: #fff5f5; }
+.patron { margin: 6px 0; line-height: 1.6; }
+.patron span { display: inline-block; min-width: 70px; color: var(--gris); }
 
 /* --- Resumen --- */
 .grande { font-size: 2.2rem; font-weight: 700; }

@@ -2,6 +2,7 @@
 import { resumenEtapa, rangoEtapa, etiquetaBase, BASE_RITMO_INICIAL, RITMO_MINIMO } from "./calculos.js";
 import { guardarPerfil } from "./datos.js";
 import { balanceComidas } from "./habitos.js";
+import { patronesDeslices } from "./deslices.js";
 import { formatoCorto } from "./fechas.js";
 import { esc, kg, etapaPorDefecto, sinEtapas } from "./ui.js";
 import { imc, claseImc, claseGrasa, diagnostico, ultimaGrasa, resumenMedidas } from "./cuerpo.js";
@@ -103,6 +104,7 @@ export function pintar(ctx) {
       </div>
     </div>
     ${tarjetaComidas(datos, etapa, hoy)}
+    ${tarjetaPatrones(datos, etapa, hoy)}
     ${tarjetaCuerpo(datos, r.pesoActual)}
     ${tarjetaMedidas(datos)}
     ${dialogoBase()}`;
@@ -125,6 +127,20 @@ function tarjetaComidas(datos, etapa, hoy) {
       ${stat("Días que comiste mal", `<span style="color:var(--rojo)">${dias(b.mal)}</span>`, `${pct(b.mal)} · tentación = ½ día`)}
       ${peor}
     </div>
+  </div>`;
+}
+
+// Qué pasa en los días malos: a qué hora, con qué comida y cuánto. Solo cuenta días con detalle cargado.
+function tarjetaPatrones(datos, etapa, hoy) {
+  const { desde, hasta } = rangoEtapa(etapa, datos.etapas, hoy);
+  const p = patronesDeslices(datos, desde, hasta < hoy ? hasta : hoy);
+  if (!p.dias) return "";
+  const lista = (items) => items.length ? items.slice(0, 5).map((i) => `${esc(i.nombre)} <b>${i.n}</b>`).join(" · ") : "—";
+  return `<div class="tarjeta">
+    <h2>Días malos: qué pasó <span class="sutil" style="font-weight:400">(${p.dias} ${p.dias === 1 ? "día" : "días"} con detalle)</span></h2>
+    <p class="patron"><span>Cuándo</span>${lista(p.momentos)}</p>
+    <p class="patron"><span>Qué</span>${lista(p.comidas)}</p>
+    <p class="patron"><span>Cuánto</span>${lista(p.cuanto)}</p>
   </div>`;
 }
 

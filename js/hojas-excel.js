@@ -3,16 +3,18 @@ import { COMIDAS } from "./datos.js";
 import { etapaDe, numeroSemana, listaSemanas, rangoEtapa } from "./calculos.js";
 import { ZONAS, grasaDe } from "./cuerpo.js";
 import { sumarDias } from "./fechas.js";
+import { textoDesliz } from "./deslices.js";
 
 const siNo = (v) => (v ? "sí" : "no");
 const fecha = (iso) => (iso ? { fecha: iso } : "");
 
 function hojaDias(datos) {
-  const filas = [["Fecha", "Peso (kg)", "Comida", "Ejercicio", "Día activo", "Relleno", "Dieta", "Semana"]];
+  const filas = [["Fecha", "Peso (kg)", "Comida", "Ejercicio", "Día activo", "Qué comí", "Cuánto", "Relleno", "Dieta", "Semana"]];
   for (const f of Object.keys(datos.dias).sort()) {
     const d = datos.dias[f];
     const etapa = etapaDe(f, datos.etapas);
-    filas.push([fecha(f), d.peso ?? "", COMIDAS[d.comida] || "", siNo(d.ejercicio), siNo(d.movimiento), siNo(d.estimado),
+    const desliz = textoDesliz(d.desliz);
+    filas.push([fecha(f), d.peso ?? "", COMIDAS[d.comida] || "", siNo(d.ejercicio), siNo(d.movimiento), desliz.comidas, desliz.cuanto, siNo(d.estimado),
       etapa ? etapa.nombre : "", etapa ? numeroSemana(f, etapa) : ""]);
   }
   return { nombre: "Días", filas };

@@ -2,6 +2,8 @@
 // Cada día y cada etapa llevan `mod` (cuándo se tocó por última vez): al mezclar gana el más reciente.
 // Los borrados dejan una "lápida" en `tombs` para que el otro aparato también borre.
 
+import { limpiarDesliz } from "./deslices.js";
+
 const CLAVE = "control_peso_datos";
 const DIAS_LAPIDA = 60;
 const MS_DIA = 86400000;
@@ -45,8 +47,11 @@ export function leerPeso(texto) {
 }
 
 // movimiento = no hice ejercicio pero no estuve sentado todo el día (si hubo ejercicio, ya está incluido).
-export function guardarDia(datos, fecha, { peso = null, comida = "bien", ejercicio = false, movimiento = false }, ahora = Date.now()) {
+// desliz = detalle de qué comiste (ver deslices.js); solo se guarda si el día no fue "bien".
+export function guardarDia(datos, fecha, { peso = null, comida = "bien", ejercicio = false, movimiento = false, desliz = null }, ahora = Date.now()) {
   const dia = { peso, comida, ejercicio: !!ejercicio, movimiento: !ejercicio && !!movimiento, estimado: false, mod: ahora };
+  const detalle = comida !== "bien" ? limpiarDesliz(desliz) : null;
+  if (detalle) dia.desliz = detalle;
   return { ...datos, dias: { ...datos.dias, [fecha]: dia } };
 }
 

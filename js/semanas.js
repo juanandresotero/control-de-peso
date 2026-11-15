@@ -1,10 +1,14 @@
 // Pantalla Semanas: como el Excel, una fila por semana (lunes a domingo) con colores, peso y ✓/✗.
 import { listaSemanas, rangoEtapa, etapaDe, numeroSemana, diasObjetivo } from "./calculos.js";
-import { formatoCorto, sumarDias } from "./fechas.js";
+import { formatoCorto, formatoLargo, sumarDias } from "./fechas.js";
+import { COMIDAS } from "./datos.js";
+import { textoDesliz } from "./deslices.js";
 import { esc, kg, etapaPorDefecto, opcionesEtapa, sinEtapas } from "./ui.js";
 
 const LETRAS = ["L", "M", "X", "J", "V", "S", "D"];
-let raiz, elegida = null;
+const MALOS = ["tentacion", "plato", "justificado"];
+const MS_APRETADO = 500;
+let raiz, elegida = null, timer = null, recienAbierto = false;
 
 export function iniciar(ctx, elemento) {
   raiz = elemento;
@@ -12,9 +16,41 @@ export function iniciar(ctx, elemento) {
     if (e.target.id === "s-etapa") { elegida = e.target.value; pintar(ctx); }
   });
   raiz.addEventListener("click", (e) => {
+    if (e.target.closest("#s-cerrar")) return raiz.querySelector("#s-detalle").close();
+    if (e.target.closest("#s-editar")) {
+      raiz.querySelector("#s-detalle").close();
+      return ctx.irA("cargar", { fecha: raiz.querySelector("#s-detalle").dataset.fecha });
+    }
+    if (e.target.id === "s-detalle") return e.target.close(); // tocar afuera cierra
+    if (recienAbierto) { recienAbierto = false; return; } // el click que sigue a mantener apretado no abre Cargar
     const dia = e.target.closest("[data-fecha]");
     if (dia) ctx.irA("cargar", { fecha: dia.dataset.fecha });
   });
+
+  // Mantener apretado un día malo abre el pop-up con lo que comiste.
+  const soltar = () => clearTimeout(timer);
+  raiz.addEventListener("pointerdown", (e) => {
+    const dia = e.target.closest("[data-malo]");
+    if (!dia) return;
+    recienAbierto = false;
+    timer = setTimeout(() => { recienAbierto = true; abrirDetalle(ctx, dia.dataset.fecha); }, MS_APRETADO);
+  });
+  ["pointerup", "pointerleave", "pointercancel"].forEach((t) => raiz.addEventListener(t, soltar, true));
+  raiz.addEventListener("contextmenu", (e) => { if (e.target.closest("[data-malo]")) e.preventDefault(); });
+}
+
+function abrirDetalle(ctx, fecha) {
+  const dia = ctx.datos().dias[fecha];
+  if (!dia) return;
+  const dialogo = raiz.querySelector("#s-detalle");
+  const comidas = dia.desliz?.comidas || [];
+  const cuanto = textoDesliz(dia.desliz).cuanto;
+  dialogo.dataset.fecha = fecha;
+  dialogo.querySelector("#s-titulo").textContent = `${formatoLargo(fecha)} · ${COMIDAS[dia.comida]}`;
+  dialogo.querySelector("#s-cuerpo").innerHTML = comidas.length || cuanto
+    ? `${comidas.map((c) => `<p><b>${esc(c.hora || "—")}</b> ${esc(c.que)}</p>`).join("")}${cuanto ? `<p class="sutil">${esc(cuanto)}</p>` : ""}`
+    : `<p class="sutil">Sin detalle.</p>`;
+  if (!dialogo.open) dialogo.showModal();
 }
 
 function rango(ctx, datos) {
@@ -51,9 +87,17 @@ export function pintar(ctx) {
         <span style="box-shadow:inset 0 0 0 3px var(--amarillo)">Día objetivo</span>
         <span style="color:#9e9e9e;font-style:italic">Relleno</span>
       </div>
-      <p class="sutil" style="margin:8px 0 0">Tocá un día para cargarlo o corregirlo.</p>
+      <p class="sutil" style="margin:8px 0 0">Tocá un día para cargarlo. Mantené apretado un día malo para ver qué comiste.</p>
     </div>
-    ${semanas.map((s) => tarjetaSemana(s, etapa || etapaDe(sumarDias(s.lunes, 6), datos.etapas), objetivos, ctx.hoy())).join("")}`;
+    ${semanas.map((s) => tarjetaSemana(s, etapa || etapaDe(sumarDias(s.lunes, 6), datos.etapas), objetivos, ctx.hoy())).join("")}
+    <dialog id="s-detalle" class="dialogo-base" aria-label="Qué comiste">
+      <h2 id="s-titulo"></h2>
+      <div id="s-cuerpo"></div>
+      <div class="fila" style="justify-content:flex-end">
+        <button class="boton" type="button" id="s-cerrar">Cerrar</button>
+        <button class="boton principal" type="button" id="s-editar">Editar</button>
+      </div>
+    </dialog>`;
 }
 
 function tarjetaSemana(semana, etapa, objetivos, hoy) {
@@ -96,7 +140,9 @@ function celdaDia({ fecha, dia }, letra, objetivos, hoy) {
   const tapado = dia && (dia.comida === "plato" || dia.comida === "justificado");
   const corre = tapado && dia.ejercicio ? `<span class="corre">🏃</span>`
     : tapado && dia.movimiento ? `<span class="corre">🚶</span>` : "";
+  const malo = dia && MALOS.includes(dia.comida);
+  const nota = malo && dia.desliz ? `<span class="nota">💬</span>` : "";
   const valor = dia && dia.peso != null ? kg(dia.peso) : "";
   const titulo = objetivos.has(fecha) ? ` title="Día objetivo: ${esc(objetivos.get(fecha).map((m) => m.nombre).join(", "))}"` : "";
-  return `<button class="${clases.join(" ")}" data-fecha="${fecha}"${titulo}>${corre}<span class="letra">${letra} ${fecha.slice(8)}</span><span class="valor">${valor}</span></button>`;
+  return `<button class="${clases.join(" ")}" data-fecha="${fecha}"${malo ? " data-malo" : ""}${titulo}>${nota}${corre}<span class="letra">${letra} ${fecha.slice(8)}</span><span class="valor">${valor}</span></button>`;
 }

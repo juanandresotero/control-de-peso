@@ -4,6 +4,7 @@ import { etapaDe, numeroSemana } from "./calculos.js";
 import { sumarDias, formatoLargo } from "./fechas.js";
 import { kg } from "./ui.js";
 import { htmlMedidas, iniciarMedidas, prellenarMedidas } from "./cargar-medidas.js";
+import { htmlDesliz, iniciarDesliz, prellenarDesliz, mostrarDesliz, leerDesliz } from "./cargar-desliz.js";
 
 const OPCIONES_COMIDA = [
   { valor: "bien", icono: "✅", texto: "Comí bien" },
@@ -39,6 +40,7 @@ export function iniciar(ctx, elemento) {
         <button class="opcion actividad ejercicio" id="c-ejercicio"><span class="icono">🏃</span>Hice ejercicio</button>
         <button class="opcion actividad movimiento" id="c-movimiento"><span class="icono">🚶</span>Día activo</button>
       </div>
+      ${htmlDesliz()}
     </div>
     <div class="zona-acciones">
       <button class="boton principal ancho" id="c-guardar">Guardar</button>
@@ -47,6 +49,7 @@ export function iniciar(ctx, elemento) {
     </div>
     ${htmlMedidas()}`;
   iniciarMedidas(ctx, raiz, () => fecha);
+  iniciarDesliz(raiz);
 
   raiz.querySelector("#c-fecha").addEventListener("change", (e) => {
     if (e.target.value) { fecha = e.target.value; prellenar(ctx); }
@@ -81,6 +84,7 @@ function prellenar(ctx, conservarMensaje = false) {
   comida = (dia && dia.comida) || "bien";
   ejercicio = !!(dia && dia.ejercicio);
   movimiento = !!(dia && dia.movimiento);
+  prellenarDesliz(datos, dia && dia.desliz);
   confirmandoBorrar = false;
   const borrarBtn = raiz.querySelector("#c-borrar");
   borrarBtn.hidden = !dia;
@@ -110,6 +114,7 @@ function pintarOpciones() {
   raiz.querySelectorAll("[data-comida]").forEach((b) => b.classList.toggle("elegida", b.dataset.comida === comida));
   raiz.querySelector("#c-ejercicio").classList.toggle("elegida", ejercicio);
   raiz.querySelector("#c-movimiento").classList.toggle("elegida", movimiento);
+  mostrarDesliz(comida !== "bien");
 }
 
 function mensaje(texto, tipo = "") {
@@ -121,7 +126,7 @@ function mensaje(texto, tipo = "") {
 function guardar(ctx) {
   const peso = leerPeso(raiz.querySelector("#c-peso").value);
   if (!peso.ok) return mensaje(peso.error, "error");
-  ctx.cambiar(guardarDia(ctx.datos(), fecha, { peso: peso.valor, comida, ejercicio, movimiento }));
+  ctx.cambiar(guardarDia(ctx.datos(), fecha, { peso: peso.valor, comida, ejercicio, movimiento, desliz: leerDesliz() }));
   const anterior = ultimoPesoAntes(ctx.datos(), fecha);
   let extra = "";
   if (peso.valor != null && anterior) {

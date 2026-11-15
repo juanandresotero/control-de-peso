@@ -72,6 +72,17 @@ Significado de `comida`:
 `movimiento` (agregado 2026-11-14) = no hice ejercicio pero estuve de arriba para abajo, no sentado todo el día.
 Se excluye con `ejercicio` (si hubo ejercicio, el movimiento ya está incluido). Se ve en **celeste**. No cambia la semana ✓/✗.
 
+`desliz` (agregado 2026-11-14, opcional, solo en días que no son `bien`): qué comiste en el día malo, para sacar patrones.
+`{ cuanto: "solo" | "varias" | "todo" | null, comidas: [{ hora: "21:30", que: "pizza" }] }` (`js/deslices.js`).
+- Cargar: al elegir tentación / plato / no fue falta de voluntad aparece "¿Qué comiste?" (hora + comida por fila,
+  "+ Otra", la caja sugiere lo ya escrito) y "¿Cuánto?" (Solo eso, el resto bien / Varias comidas / Todo el día).
+  Se guardan ordenadas por hora; filas vacías se descartan.
+- Semanas: 💬 en el día malo con detalle; **mantener apretado** (0,5 s) un día malo abre un pop-up con el detalle
+  (Cerrar / Editar). Un toque corto sigue abriendo Cargar.
+- Resumen: tarjeta "Días malos: qué pasó" (solo días con detalle de la dieta): Cuándo (hora agrupada: Mañana 5–12,
+  Mediodía 12–16, Tarde 16–20, Noche 20–5), Qué (comidas, sin importar mayúsculas), Cuánto. Conteos simples, top 5.
+- Excel: columnas "Qué comí" y "Cuánto".
+
 **Mezcla entre aparatos**: por cada día (clave = fecha) y cada etapa (clave = id) gana el `mod` más
 reciente; `marcasSemana` no se edita desde la app (solo importación). Los borrados usan lápidas.
 
