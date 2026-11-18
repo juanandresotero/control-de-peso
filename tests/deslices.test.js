@@ -17,6 +17,12 @@ test("limpiarDesliz ordena las comidas por hora (las sin hora al final)", () => 
   assert.deepEqual(d.comidas.map((c) => c.que), ["alfajor", "pizza", "helado"]);
 });
 
+test("limpiarDesliz guarda la nota (recortada) y alcanza con la nota sola", () => {
+  assert.deepEqual(limpiarDesliz({ cuanto: null, comidas: [], nota: "  Cumpleaños de Martín " }),
+    { cuanto: null, comidas: [], nota: "Cumpleaños de Martín" });
+  assert.equal("nota" in limpiarDesliz({ cuanto: "todo", comidas: [], nota: "  " }), false);
+});
+
 test("momentoDe agrupa la hora en mañana, mediodía, tarde y noche", () => {
   assert.equal(momentoDe("08:15"), "Mañana");
   assert.equal(momentoDe("12:00"), "Mediodía");
@@ -57,6 +63,7 @@ test("comidasUsadas lista lo ya escrito, lo más repetido primero (empates por f
 
 test("textoDesliz arma las líneas para el pop-up y el Excel", () => {
   assert.deepEqual(textoDesliz({ cuanto: "todo", comidas: [{ hora: "21:00", que: "pizza" }, { hora: "", que: "helado" }] }),
-    { comidas: "21:00 pizza; helado", cuanto: "Todo el día" });
-  assert.deepEqual(textoDesliz(undefined), { comidas: "", cuanto: "" });
+    { comidas: "21:00 pizza; helado", cuanto: "Todo el día", nota: "" });
+  assert.deepEqual(textoDesliz({ cuanto: null, comidas: [], nota: "Restaurante" }), { comidas: "", cuanto: "", nota: "Restaurante" });
+  assert.deepEqual(textoDesliz(undefined), { comidas: "", cuanto: "", nota: "" });
 });

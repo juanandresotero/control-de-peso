@@ -135,6 +135,8 @@ select { width: 100%; }
 .desliz-fila input { min-width: 0; padding: 8px; border: 1px solid var(--borde); border-radius: 8px; font: inherit; }
 .desliz-fila .d-hora { flex: 0 0 auto; width: 110px; }
 .desliz-fila .d-que { flex: 1; }
+.d-nota { width: 100%; padding: 8px; border: 1px solid var(--borde); border-radius: 8px; font: inherit; }
+.nota-texto { font-style: italic; }
 .boton.chico { padding: 6px 12px; font-size: .9rem; }
 .cuanto { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .cuanto .opcion { padding: 10px 6px; font-size: .9rem; }

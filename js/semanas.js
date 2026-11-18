@@ -44,11 +44,11 @@ function abrirDetalle(ctx, fecha) {
   if (!dia) return;
   const dialogo = raiz.querySelector("#s-detalle");
   const comidas = dia.desliz?.comidas || [];
-  const cuanto = textoDesliz(dia.desliz).cuanto;
+  const { cuanto, nota } = textoDesliz(dia.desliz);
   dialogo.dataset.fecha = fecha;
   dialogo.querySelector("#s-titulo").textContent = `${formatoLargo(fecha)} · ${COMIDAS[dia.comida]}`;
-  dialogo.querySelector("#s-cuerpo").innerHTML = comidas.length || cuanto
-    ? `${comidas.map((c) => `<p><b>${esc(c.hora || "—")}</b> ${esc(c.que)}</p>`).join("")}${cuanto ? `<p class="sutil">${esc(cuanto)}</p>` : ""}`
+  dialogo.querySelector("#s-cuerpo").innerHTML = comidas.length || cuanto || nota
+    ? `${nota ? `<p class="nota-texto">${esc(nota)}</p>` : ""}${comidas.map((c) => `<p>${c.hora ? `<b>${esc(c.hora)}</b> ` : "• "}${esc(c.que)}</p>`).join("")}${cuanto ? `<p class="sutil">${esc(cuanto)}</p>` : ""}`
     : `<p class="sutil">Sin detalle.</p>`;
   if (!dialogo.open) dialogo.showModal();
 }

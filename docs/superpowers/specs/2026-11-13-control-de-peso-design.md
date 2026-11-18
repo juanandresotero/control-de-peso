@@ -73,7 +73,8 @@ Significado de `comida`:
 Se excluye con `ejercicio` (si hubo ejercicio, el movimiento ya está incluido). Se ve en **celeste**. No cambia la semana ✓/✗.
 
 `desliz` (agregado 2026-11-14, opcional, solo en días que no son `bien`): qué comiste en el día malo, para sacar patrones.
-`{ cuanto: "solo" | "varias" | "todo" | null, comidas: [{ hora: "21:30", que: "pizza" }] }` (`js/deslices.js`).
+`{ cuanto: "solo" | "varias" | "todo" | null, comidas: [{ hora: "21:30", que: "pizza" }], nota?: "Cumpleaños de Martín" }` (`js/deslices.js`).
+`que` = la comida, corta (se cuenta en los patrones); `nota` = la situación/cantidades (no se cuenta, se ve en el pop-up y el Excel).
 - Cargar: al elegir tentación / plato / no fue falta de voluntad aparece "¿Qué comiste?" (hora + comida por fila,
   "+ Otra", la caja sugiere lo ya escrito) y "¿Cuánto?" (Solo eso, el resto bien / Varias comidas / Todo el día).
   Se guardan ordenadas por hora; filas vacías se descartan.

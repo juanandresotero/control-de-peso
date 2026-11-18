@@ -1,6 +1,7 @@
 // Detalle de los días que comiste mal: a qué hora, qué comiste y cuánto (un plato o todo el día).
 // Sirve para sacar patrones: en qué momento del día y con qué comida te pasa más.
-// Se guarda en el día como `desliz: { cuanto, comidas: [{ hora: "21:30", que: "pizza" }] }`.
+// Se guarda en el día como `desliz: { cuanto, comidas: [{ hora: "21:30", que: "pizza" }], nota? }`.
+// `que` = la comida, corta (para poder contarla); `nota` = la situación ("Cumpleaños de Martín").
 
 export const CUANTO = {
   solo: "Solo eso, el resto bien",
@@ -16,7 +17,9 @@ export function limpiarDesliz(desliz) {
     .filter((c) => c.hora || c.que)
     .sort((a, b) => (a.hora || "99").localeCompare(b.hora || "99")); // por hora; sin hora al final
   const cuanto = CUANTO[desliz.cuanto] ? desliz.cuanto : null;
-  return comidas.length || cuanto ? { cuanto, comidas } : null;
+  const nota = String(desliz.nota || "").trim();
+  if (!comidas.length && !cuanto && !nota) return null;
+  return nota ? { cuanto, comidas, nota } : { cuanto, comidas };
 }
 
 // "21:30" → "Noche". Mañana 5–12, Mediodía 12–16, Tarde 16–20, Noche 20–5.
@@ -65,9 +68,10 @@ export function patronesDeslices(datos, desde, hasta) {
 }
 
 export function textoDesliz(desliz) {
-  if (!desliz) return { comidas: "", cuanto: "" };
+  if (!desliz) return { comidas: "", cuanto: "", nota: "" };
   return {
     comidas: desliz.comidas.map((c) => [c.hora, c.que].filter(Boolean).join(" ")).join("; "),
     cuanto: CUANTO[desliz.cuanto] || "",
+    nota: desliz.nota || "",
   };
 }

@@ -1,5 +1,5 @@
 // Bloque "¿Qué comiste?" de Cargar: aparece en los días que no fueron "bien".
-// Una fila por comida (hora + qué), "+ Otra" para sumar filas, y "¿Cuánto?" con 3 opciones.
+// Una fila por comida (hora + qué), "+ Otra" para sumar filas, "¿Cuánto?" con 3 opciones y una nota libre.
 import { CUANTO, comidasUsadas } from "./deslices.js";
 import { esc } from "./ui.js";
 
@@ -14,13 +14,15 @@ export function htmlDesliz() {
     <div class="cuanto">
       ${Object.entries(CUANTO).map(([valor, texto]) => `<button type="button" class="opcion" data-cuanto="${valor}">${texto}</button>`).join("")}
     </div>
+    <h3>Nota</h3>
+    <input type="text" id="d-nota" class="d-nota" maxlength="160" placeholder="Ej: cumpleaños, 3 porciones" aria-label="Nota">
     <datalist id="d-sugeridas"></datalist>
   </div>`;
 }
 
 const fila = (c = { hora: "", que: "" }) => `<div class="desliz-fila">
   <input type="time" class="d-hora" value="${esc(c.hora)}" aria-label="Hora">
-  <input type="text" class="d-que" value="${esc(c.que)}" list="d-sugeridas" maxlength="80" placeholder="Ej: 2 porciones de pizza" aria-label="Qué comiste">
+  <input type="text" class="d-que" value="${esc(c.que)}" list="d-sugeridas" maxlength="80" placeholder="Ej: pizza" aria-label="Qué comiste">
   <button type="button" class="boton chico" data-quitar aria-label="Quitar">✕</button>
 </div>`;
 
@@ -47,6 +49,7 @@ export function prellenarDesliz(datos, desliz) {
   raiz.querySelector("#d-filas").innerHTML = comidas.map(fila).join("");
   cuanto = desliz?.cuanto || null;
   pintarCuanto();
+  raiz.querySelector("#d-nota").value = desliz?.nota || "";
   raiz.querySelector("#d-sugeridas").innerHTML = comidasUsadas(datos).map((c) => `<option value="${esc(c)}">`).join("");
 }
 
@@ -59,7 +62,7 @@ export function leerDesliz() {
     hora: f.querySelector(".d-hora").value,
     que: f.querySelector(".d-que").value,
   }));
-  return { cuanto, comidas };
+  return { cuanto, comidas, nota: raiz.querySelector("#d-nota").value };
 }
 
 function pintarCuanto() {
