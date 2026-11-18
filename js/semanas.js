@@ -82,8 +82,8 @@ export function pintar(ctx) {
         <span style="color:var(--rojo);font-weight:700">Tentación</span>
         <span style="background:var(--rojo-fondo);color:#fff">Plato malo</span>
         <span style="background:var(--naranja)">No fue falta de voluntad</span>
-        <span style="background:var(--azul)">Ejercicio</span>
-        <span style="background:var(--celeste)">Día activo</span>
+        <span style="border:3px solid var(--azul)">Ejercicio</span>
+        <span style="border:3px solid var(--celeste)">Día activo</span>
         <span style="box-shadow:inset 0 0 0 3px var(--amarillo)">Día objetivo</span>
         <span style="color:#9e9e9e;font-style:italic">Relleno</span>
       </div>
@@ -129,20 +129,17 @@ function celdaDia({ fecha, dia }, letra, objetivos, hoy) {
   if (dia) {
     if (dia.comida === "plato") clases.push("plato");
     else if (dia.comida === "justificado") clases.push("justificado");
-    else if (dia.ejercicio) clases.push("ejercicio");
+    // Ejercicio y día activo van como recuadro de color: el fondo queda solo para cómo comiste.
+    if (dia.ejercicio) clases.push("ejercicio");
     else if (dia.movimiento) clases.push("movimiento");
     if (dia.comida === "tentacion") clases.push("tentacion");
     if (dia.estimado) clases.push("estimado");
   }
   if (objetivos.has(fecha)) clases.push("objetivo");
   if (fecha === hoy) clases.push("hoy");
-  // En días rojos/naranjas el color de fondo ya está usado: el ejercicio o movimiento va como iconito.
-  const tapado = dia && (dia.comida === "plato" || dia.comida === "justificado");
-  const corre = tapado && dia.ejercicio ? `<span class="corre">🏃</span>`
-    : tapado && dia.movimiento ? `<span class="corre">🚶</span>` : "";
   const malo = dia && MALOS.includes(dia.comida);
   const nota = malo && dia.desliz ? `<span class="nota">💬</span>` : "";
   const valor = dia && dia.peso != null ? kg(dia.peso) : "";
   const titulo = objetivos.has(fecha) ? ` title="Día objetivo: ${esc(objetivos.get(fecha).map((m) => m.nombre).join(", "))}"` : "";
-  return `<button class="${clases.join(" ")}" data-fecha="${fecha}"${malo ? " data-malo" : ""}${titulo}>${nota}${corre}<span class="letra">${letra} ${fecha.slice(8)}</span><span class="valor">${valor}</span></button>`;
+  return `<button class="${clases.join(" ")}" data-fecha="${fecha}"${malo ? " data-malo" : ""}${titulo}>${nota}<span class="letra">${letra} ${fecha.slice(8)}</span><span class="valor">${valor}</span></button>`;
 }

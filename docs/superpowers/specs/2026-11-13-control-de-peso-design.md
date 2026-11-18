@@ -120,8 +120,8 @@ reciente; `marcasSemana` no se edita desde la app (solo importación). Los borra
 2. **Semanas**: tabla tipo Excel, la más reciente arriba. Por fila: Semana N, fechas, 7 días con colores,
    peso de la semana, diferencia vs la anterior (verde si bajó, rojo si subió), ✓/✗.
    Colores de cada día:
-   - fondo rojo = `plato`; fondo naranja/dorado = `justificado`; fondo azul = ejercicio, fondo celeste = movimiento (si no hay
-     plato/justificado; si los hay, se ve un ícono 🏃 o 🚶); número rojo = `tentacion`;
+   - fondo rojo = `plato`; fondo naranja/dorado = `justificado`; **recuadro** azul = ejercicio, recuadro celeste = día activo (desde 2026-11-18: el fondo queda
+     solo para cómo comiste, así el rojo resalta; hoy = contorno verde); número rojo = `tentacion`;
    - borde/fondo amarillo = **día objetivo** de alguna meta;
    - número gris en cursiva = estimado.
    Filtro: etapa actual / otra etapa / todo. Tocar un día abre Cargar en esa fecha.

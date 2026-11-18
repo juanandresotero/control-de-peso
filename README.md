@@ -6,7 +6,7 @@ App para anotar el peso de cada día, desde el celu o la PC, con los mismos dato
 En el celu: abrir el link → menú del navegador → "Agregar a pantalla de inicio" (queda como una app).
 
 ## Qué hace
-- **Cargar**: peso con decimal + cómo comiste (bien / tentación / plato malo / no fue falta de voluntad) + ejercicio (azul) o "día activo" (celeste). En los días malos: qué comiste (hora + comida) y cuánto; mantené apretado el día en Semanas para verlo, y Resumen muestra los patrones. Se pueden corregir días anteriores.
+- **Cargar**: peso con decimal + cómo comiste (bien / tentación / plato malo / no fue falta de voluntad) + ejercicio (recuadro azul) o "día activo" (recuadro celeste). En los días malos: qué comiste (hora + comida) y cuánto; mantené apretado el día en Semanas para verlo, y Resumen muestra los patrones. Se pueden corregir días anteriores.
 - **Semanas**: como el Excel, con colores, peso de la semana, cuánto bajaste o subiste y la semana perfecta ✓/✗ (automática).
 - **Resumen**: peso actual, kilos bajados, promedio real, ritmo de las últimas 4 semanas (avisa si estás estancado), semanas perfectas, y por cada meta cuánto falta y cuándo llegás a tu ritmo.
 - **Gráficas**: semana a semana y día a día. Los días sin pesarte se unen con línea punteada.
